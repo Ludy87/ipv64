@@ -44,26 +44,26 @@ async def check_domain_login(hass: core.HomeAssistant, data: dict[str, str]):
                 headers=headers,
                 raise_for_status=True,
             )
-            result = await resp.json()
+            result = dict(await resp.json())
         except aiohttp.ClientResponseError as error:
             _LOGGER.error("Your 'Account Update Token' is incorrect. Error: %s | Status: %i", error.message, error.status)
             raise TokenError() from error
 
-    url_account_info = "https://ipv64.net/api.php?get_account_info"
-    async with async_timeout.timeout(TIMEOUT):
+        url_account_info = "https://ipv64.net/api.php?get_account_info"
         try:
-            resp = await session.get(
+            resp_account_info = await session.get(
                 url_account_info,
                 headers=headers,
                 raise_for_status=True,
             )
-            account_result = await resp.json()
+            account_result = await resp_account_info.json()
             if account_result["update_hash"] != data[CONF_API_KEY]:
                 raise APIKeyError()
-            result["dyndns_update_limit"] = account_result["dyndns_update_limit"]
+            result.update({"dyndns_update_limit": account_result["account_class"]["dyndns_update_limit"]})
         except aiohttp.ClientResponseError as error:
             _LOGGER.error("Your 'API Key' is incorrect. Error: %s | Status: %i", error.message, error.status)
             raise APIKeyError() from error
+    _LOGGER.debug(result)
     return result
 
 
@@ -113,7 +113,7 @@ class IPv64ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                         CONF_DOMAIN: user_input[CONF_DOMAIN],
                         CONF_API_KEY: user_input[CONF_API_KEY],
                         CONF_TOKEN: user_input[CONF_TOKEN],
-                        "dyndns_update_limit": info["dyndns_update_limit"],
+                        "dyndns_update_limit": info["data"]["dyndns_update_limit"],
                     },
                     options={CONF_SCAN_INTERVAL: user_input[CONF_SCAN_INTERVAL]},
                 )

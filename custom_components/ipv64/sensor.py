@@ -62,6 +62,8 @@ class IPv64BaseEntity(CoordinatorEntity[IPv64DataUpdateCoordinator], RestoreSens
 class IPv64Sensor(IPv64BaseEntity, SensorEntity):
     """Sensor entity class for IPv64."""
 
+    _attr_icon = "mdi:ip"
+
     def __init__(
         self,
         coordinator: IPv64DataUpdateCoordinator,
