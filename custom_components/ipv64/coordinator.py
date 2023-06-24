@@ -66,7 +66,7 @@ class IPv64DataUpdateCoordinator(DataUpdateCoordinator):
                     result = await resp.json()
                     result_dict = {
                         "wildcard": result["subdomains"][self.config_entry.data[CONF_DOMAIN]]["wildcard"],
-                        "updates": result["subdomains"][self.config_entry.data[CONF_DOMAIN]]["updates"],
+                        "updates": f"{result['subdomains'][self.config_entry.data[CONF_DOMAIN]]['updates']}/{self.config_entry.data['dyndns_update_limit']}",
                         CONF_IP_ADDRESS: result["subdomains"][self.config_entry.data[CONF_DOMAIN]]["records"][0]["content"],
                         "last_update": result["subdomains"][self.config_entry.data[CONF_DOMAIN]]["records"][0]["last_update"],
                     }
@@ -75,7 +75,9 @@ class IPv64DataUpdateCoordinator(DataUpdateCoordinator):
                     errors = {
                         "Account Update Token": "incorrect",
                         "wildcard": self.data["wildcard"] if self.data and "wildcard" in self.data else "unlivable",
-                        "updates": self.data["updates"] if self.data and "updates" in self.data else "unlivable",
+                        "updates": f"{self.data['updates']}/{self.data['dyndns_update_limit']}"
+                        if self.data and "updates" in self.data and "dyndns_update_limit" in self.data
+                        else "unlivable",
                         CONF_IP_ADDRESS: self.data[CONF_IP_ADDRESS]
                         if self.data and CONF_IP_ADDRESS in self.data
                         else "unlivable",
