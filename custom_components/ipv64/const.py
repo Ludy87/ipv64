@@ -21,15 +21,9 @@ DOMAIN = "ipv64"
 DEFAULT_INTERVAL = 23
 
 DATA_SCHEMA = {
-    vol.Required(CONF_DOMAIN): TextSelector(
-        TextSelectorConfig(type=TextSelectorType.TEXT, multiline=False)
-    ),
-    vol.Required(CONF_TOKEN): TextSelector(
-        TextSelectorConfig(type=TextSelectorType.TEXT, multiline=False)
-    ),
-    vol.Required(CONF_API_KEY): TextSelector(
-        TextSelectorConfig(type=TextSelectorType.TEXT, multiline=False)
-    ),
+    vol.Required(CONF_DOMAIN): TextSelector(TextSelectorConfig(type=TextSelectorType.TEXT, multiline=False)),
+    vol.Required(CONF_TOKEN): TextSelector(TextSelectorConfig(type=TextSelectorType.TEXT, multiline=False)),
+    vol.Required(CONF_API_KEY): TextSelector(TextSelectorConfig(type=TextSelectorType.TEXT, multiline=False)),
     vol.Required(CONF_SCAN_INTERVAL, default=DEFAULT_INTERVAL): NumberSelector(
         NumberSelectorConfig(mode=NumberSelectorMode.SLIDER, min=1, max=120, unit_of_measurement="minutes")
     ),
