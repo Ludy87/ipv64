@@ -16,6 +16,23 @@
 ---
 ![IPv64](https://github.com/Ludy87/ipv64/blob/main/images/ipv64_logo.png?raw=true)
 
+## What is IPv64.net?
+
+IPv64 is of course not a new Internet Protocol (64), but simply a deduplicated short form of IPv6 and IPv4. On the IPv64 site you will find a Dynamic DNS service (DynDNS) and many other useful tools for your daily internet experience.
+
+With the dynamic DNS service of IPv64 you can register and use free subdomains. The update of the domain is done automatically by your own router or alternative hardware / software. Besides updating IP addresses, simple Let's Encrypt DNS challenges are also possible.
+
+Own domains can be added and benefit from all IPv64.net features like DynDNS services, GEO load balancing, DDoS protection, DynDNS2 and SSL encryption.
+
+[![Register now for free](https://img.shields.io/static/v1.svg?label=&message=Register%20now%20for%20free&style=for-the-badge&color=blue)](https://ipv64.net/account.php)\
+[![Discord](https://img.shields.io/static/v1.svg?label=Discord&message=rpicloud&style=for-the-badge&color=black&logo=discord&logoColor=white&labelColor=blue)](https://discord.gg/rpicloud)
+[![Youtube](https://img.shields.io/static/v1.svg?label=Youtube&message=rpicloud&style=for-the-badge&color=black&logo=youtube&logoColor=white&labelColor=red)](https://youtube.com/c/RaspberryPiCloud)
+[![Twitter](https://img.shields.io/static/v1.svg?label=Twitter&message=rpicloud&style=for-the-badge&color=black&logo=twitter&logoColor=white&labelColor=blue)](https://twitter.com/dennis_schroed)
+[![Blog Schroederdennis.de](https://img.shields.io/static/v1.svg?label=Blog&message=rpicloud&style=for-the-badge&color=black&logo=twitter&logoColor=white&labelColor=grey)](https://schroederdennis.de/d)
+
+
+---
+
 ## Installation
 
 ### MANUAL INSTALLATION
