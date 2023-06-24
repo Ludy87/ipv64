@@ -1,0 +1,7 @@
+{
+    "name": "IPv64",
+    "country": ["DE", "US"],
+    "render_readme": true,
+    "homeassistant": "2023.6.1",
+    "hacs": "1.32.1"
+  }
