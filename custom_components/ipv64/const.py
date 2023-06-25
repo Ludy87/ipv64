@@ -1,5 +1,6 @@
 """Const for IPv64"""
 from __future__ import annotations
+
 from typing import Final
 
 import voluptuous as vol
@@ -34,3 +35,5 @@ TRACKER_UPDATE_STR: Final = f"{DOMAIN}_tracker_update"
 
 TIMEOUT = 10
 UPDATE_URL = "https://ipv64.net/nic/update"
+GET_DOMAIN_URL = "https://ipv64.net/api.php?get_domains"
+GET_ACCOUNT_INFO_URL = "https://ipv64.net/api.php?get_account_info"
