@@ -63,8 +63,7 @@ async def get_account_info(data: dict[str, str], result: dict, session: aiohttp.
                 raise APIKeyError()
             result.update(
                 {
-                    "dyndns_update_limit": account_result["account_class"]["dyndns_update_limit"],
-                    "daily_update_limit": account_result["dyndns_updates"],
+                    "daily_update_limit": account_result["account_class"]["dyndns_update_limit"],
                     "dyndns_updates": account_result["dyndns_updates"],
                 }
             )
@@ -120,7 +119,6 @@ class IPv64ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                         CONF_DOMAIN: user_input[CONF_DOMAIN],
                         CONF_API_KEY: user_input[CONF_API_KEY],
                         CONF_TOKEN: user_input[CONF_TOKEN],
-                        "dyndns_update_limit": info["data"]["dyndns_update_limit"],
                     },
                     options={CONF_SCAN_INTERVAL: user_input[CONF_SCAN_INTERVAL]},
                 )

@@ -64,8 +64,8 @@ class IPv64DataUpdateCoordinator(DataUpdateCoordinator):
                 if error.status == 429:
                     _LOGGER.error(
                         "Your number of updates has been reached %i of %i. Error: %s | Status: %i",
+                        result_account_info["dyndns_updates"],
                         result_account_info["daily_update_limit"],
-                        result_account_info["dyndns_update_limit"],
                         error.message,
                         error.status,
                     )
