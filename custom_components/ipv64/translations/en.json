@@ -17,19 +17,18 @@
                     "domain": "Domain",
                     "token": "Account Update Token",
                     "apikey": "API Key",
-                    "scan_interval": "update time"
+                    "scan_interval": "Update time (0-120 minutes 0=disabled)"
                 }
             }
         }
     },
     "options": {
-        "error": {},
         "step": {
             "init": {
                 "title": "update time",
                 "description": "Please note that it depends on your account status how many IP address updates can take place. With the free account, there are 64 requests per day.\n\nThe optimal setting is 23 minutes (24:64x60=22.5 minutes)",
                 "data": {
-                    "scan_interval": "update time"
+                    "scan_interval": "Update time (0-120 minutes 0=disabled)"
                 }
             }
         }

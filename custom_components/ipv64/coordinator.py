@@ -25,11 +25,15 @@ class IPv64DataUpdateCoordinator(DataUpdateCoordinator):
     def __init__(self, hass: HomeAssistant, entry: ConfigEntry) -> None:
         """Initialize IPv64 data updater."""
         _LOGGER.debug("Initialize IPv64 data updater")
+        intervale = entry.options.get(CONF_SCAN_INTERVAL, 23)
+        if intervale == 0:
+            _LOGGER.info("IPv64 data updater disabled")
+
         super().__init__(
             hass=hass,
             logger=_LOGGER,
             name=f"{DOMAIN}-{entry.entry_id}",
-            update_interval=timedelta(minutes=entry.options.get(CONF_SCAN_INTERVAL, 23)),
+            update_interval=timedelta(intervale) if intervale > 0 else None,
         )
 
     async def _async_update_data(self):
@@ -43,18 +47,19 @@ class IPv64DataUpdateCoordinator(DataUpdateCoordinator):
         else:
             self.data = {CONF_DOMAIN: self.config_entry.data[CONF_DOMAIN]}
 
-        params = {"key": self.config_entry.data[CONF_API_KEY], CONF_HOST: self.config_entry.data[CONF_DOMAIN]}
-
         session: aiohttp.ClientSession = async_get_clientsession(self.hass)
+        headers = {"Authorization": f"Bearer {self.config_entry.data[CONF_TOKEN]}"}
+
         async with async_timeout.timeout(TIMEOUT):
             result_account_info = await get_account_info(
                 self.config_entry.data,
                 {},
                 session,
-                headers={"Authorization": f"Bearer {self.config_entry.data[CONF_TOKEN]}"},
+                headers=headers,
             )
         async with async_timeout.timeout(TIMEOUT):
             try:
+                params = {"key": self.config_entry.data[CONF_API_KEY], CONF_HOST: self.config_entry.data[CONF_DOMAIN]}
                 resp = await session.get(UPDATE_URL, params=params, raise_for_status=True)
                 account_result = await resp.text()
 
@@ -71,8 +76,6 @@ class IPv64DataUpdateCoordinator(DataUpdateCoordinator):
                     )
                 else:
                     _LOGGER.error("Your 'API Key' is incorrect. Error: %s | Status: %i", error.message, error.status)
-
-        headers = {"Authorization": f"Bearer {self.config_entry.data[CONF_TOKEN]}"}
 
         async with async_timeout.timeout(TIMEOUT):
             try:

@@ -135,7 +135,7 @@ class IPv64OptionsFlowHandler(config_entries.OptionsFlowWithConfigEntry):
         data_schema = vol.Schema(
             {
                 vol.Required(CONF_SCAN_INTERVAL, default=options.get(CONF_SCAN_INTERVAL, 23)): NumberSelector(
-                    NumberSelectorConfig(mode=NumberSelectorMode.SLIDER, min=1, max=120, unit_of_measurement="minutes")
+                    NumberSelectorConfig(mode=NumberSelectorMode.SLIDER, min=0, max=120, unit_of_measurement="minutes")
                 ),
             }
         )

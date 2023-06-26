@@ -26,7 +26,7 @@ DATA_SCHEMA = {
     vol.Required(CONF_TOKEN): TextSelector(TextSelectorConfig(type=TextSelectorType.TEXT, multiline=False)),
     vol.Required(CONF_API_KEY): TextSelector(TextSelectorConfig(type=TextSelectorType.TEXT, multiline=False)),
     vol.Required(CONF_SCAN_INTERVAL, default=DEFAULT_INTERVAL): NumberSelector(
-        NumberSelectorConfig(mode=NumberSelectorMode.SLIDER, min=1, max=120, unit_of_measurement="minutes")
+        NumberSelectorConfig(mode=NumberSelectorMode.SLIDER, min=0, max=120, unit_of_measurement="minutes")
     ),
 }
 

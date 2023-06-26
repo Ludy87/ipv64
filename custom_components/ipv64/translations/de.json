@@ -17,19 +17,18 @@
                     "domain": "Domain",
                     "token": "Account Update Token",
                     "apikey": "API-Schlüssel",
-                    "scan_interval": "Aktualisierungszeit"
+                    "scan_interval": "Aktualisierungszeit (0-120 Minuten 0=deaktiviert)"
                 }
             }
         }
     },
     "options": {
-        "error": {},
         "step": {
             "init": {
                 "title": "Aktualisierungszeit",
                 "description": "Bitte beachte, dass je nach Kontostatus die Anzahl der IP-Adressaktualisierungen begrenzt sein kann. Mit dem kostenlosen Konto sind 64 Anfragen pro Tag möglich.\n\nDie optimale Einstellung beträgt 23 Minuten (24:64x60=22,5 Minuten).",
                 "data": {
-                    "scan_interval": "Aktualisierungszeit"
+                    "scan_interval": "Aktualisierungszeit (0-120 Minuten 0=deaktiviert)"
                 }
             }
         }
