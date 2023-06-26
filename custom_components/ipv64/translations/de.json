@@ -12,7 +12,7 @@
         "step": {
             "user": {
                 "title": "IPv64.net | Kostenloser DynDNS2- und Healthcheck-Dienst",
-                "description": "DynDNS2 ist ein Dienst, mit dem ein Computer trotz wechselnder IP-Adresse unter demselben Domainnamen stets erreichbar ist.\n\nIn Zeiten zunehmender Geräte mit IPv6-Nutzung wird der DynDNS-Dienst immer wichtiger.",
+                "description": "Mit IPv64.net können Sie Ihre Domänen verwalten und verschiedene Funktionen nutzen, darunter DynDNS-Updates, Wildcard-Unterstützung und Healthchecks. Der Dienst bietet auch eine API, über die Sie auf die Funktionen zugreifen und Ihre Domänen verwalten können.\n\nSie benötigen einen Account Update Token und einen API-Schlüssel, um auf die IPv64.net-API zugreifen zu können. Mit diesen Informationen können Sie Ihre Domänen verwalten, Updates durchführen und weitere Informationen zu Ihrem Konto abrufen.",
                 "data": {
                     "domain": "Domain",
                     "token": "Account Update Token",
