@@ -51,6 +51,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: config_entries.ConfigEnt
     return True
 
 
+async def options_update_listener(hass: HomeAssistant, config_entry: config_entries.ConfigEntry) -> None:
+    """Handle options update."""
+    _LOGGER.debug("Configuration options updated, reloading IPv64.net integration")
+    await hass.config_entries.async_reload(config_entry.entry_id)
+
+
 async def async_unload_entry(hass: HomeAssistant, entry: config_entries.ConfigEntry) -> bool:
     """Unload a config entry."""
     _LOGGER.debug("Unload a config entry")
@@ -59,9 +65,3 @@ async def async_unload_entry(hass: HomeAssistant, entry: config_entries.ConfigEn
     if unload_ok:
         hass.data[DOMAIN].pop(entry.entry_id)
     return unload_ok
-
-
-async def options_update_listener(hass: HomeAssistant, config_entry: config_entries.ConfigEntry) -> None:
-    """Handle options update."""
-    _LOGGER.debug("Configuration options updated, reloading IPv64.net integration")
-    await hass.config_entries.async_reload(config_entry.entry_id)

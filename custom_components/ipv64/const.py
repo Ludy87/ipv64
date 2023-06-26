@@ -1,5 +1,6 @@
 """Const for IPv64"""
 from __future__ import annotations
+
 from typing import Final
 
 import voluptuous as vol
@@ -25,7 +26,7 @@ DATA_SCHEMA = {
     vol.Required(CONF_TOKEN): TextSelector(TextSelectorConfig(type=TextSelectorType.TEXT, multiline=False)),
     vol.Required(CONF_API_KEY): TextSelector(TextSelectorConfig(type=TextSelectorType.TEXT, multiline=False)),
     vol.Required(CONF_SCAN_INTERVAL, default=DEFAULT_INTERVAL): NumberSelector(
-        NumberSelectorConfig(mode=NumberSelectorMode.SLIDER, min=1, max=120, unit_of_measurement="minutes")
+        NumberSelectorConfig(mode=NumberSelectorMode.SLIDER, min=0, max=120, unit_of_measurement="minutes")
     ),
 }
 
@@ -34,3 +35,5 @@ TRACKER_UPDATE_STR: Final = f"{DOMAIN}_tracker_update"
 
 TIMEOUT = 10
 UPDATE_URL = "https://ipv64.net/nic/update"
+GET_DOMAIN_URL = "https://ipv64.net/api.php?get_domains"
+GET_ACCOUNT_INFO_URL = "https://ipv64.net/api.php?get_account_info"

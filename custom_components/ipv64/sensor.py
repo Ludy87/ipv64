@@ -77,7 +77,7 @@ class IPv64Sensor(IPv64BaseEntity, SensorEntity):
     @property
     def native_value(self) -> StateType:
         """Return the native value of the sensor."""
-        if "updates" in self.coordinator.data:
+        if CONF_IP_ADDRESS in self.coordinator.data:
             return self.coordinator.data[CONF_IP_ADDRESS]
 
     @property

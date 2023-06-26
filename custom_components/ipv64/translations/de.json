@@ -12,24 +12,23 @@
         "step": {
             "user": {
                 "title": "IPv64.net | Kostenloser DynDNS2- und Healthcheck-Dienst",
-                "description": "DynDNS2 ist ein Dienst, mit dem ein Computer trotz wechselnder IP-Adresse unter demselben Domainnamen stets erreichbar ist.\n\nIn Zeiten zunehmender Geräte mit IPv6-Nutzung wird der DynDNS-Dienst immer wichtiger.",
+                "description": "Mit IPv64.net können Sie Ihre Domänen verwalten und verschiedene Funktionen nutzen, darunter DynDNS-Updates, Wildcard-Unterstützung und Healthchecks. Der Dienst bietet auch eine API, über die Sie auf die Funktionen zugreifen und Ihre Domänen verwalten können.\n\nSie benötigen einen Account Update Token und einen API-Schlüssel, um auf die IPv64.net-API zugreifen zu können. Mit diesen Informationen können Sie Ihre Domänen verwalten, Updates durchführen und weitere Informationen zu Ihrem Konto abrufen.",
                 "data": {
                     "domain": "Domain",
                     "token": "Account Update Token",
                     "apikey": "API-Schlüssel",
-                    "scan_interval": "Aktualisierungszeit"
+                    "scan_interval": "Aktualisierungszeit (0-120 Minuten 0=deaktiviert)"
                 }
             }
         }
     },
     "options": {
-        "error": {},
         "step": {
             "init": {
                 "title": "Aktualisierungszeit",
                 "description": "Bitte beachte, dass je nach Kontostatus die Anzahl der IP-Adressaktualisierungen begrenzt sein kann. Mit dem kostenlosen Konto sind 64 Anfragen pro Tag möglich.\n\nDie optimale Einstellung beträgt 23 Minuten (24:64x60=22,5 Minuten).",
                 "data": {
-                    "scan_interval": "Aktualisierungszeit"
+                    "scan_interval": "Aktualisierungszeit (0-120 Minuten 0=deaktiviert)"
                 }
             }
         }

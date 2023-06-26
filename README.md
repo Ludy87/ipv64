@@ -1,4 +1,4 @@
-# IPv64.net | Free DynDNS2 & Healthcheck Service
+# IPv64.net | Free DynDNS2 & Healthcheck Service | Integration for Home-Assistant
 
 [![Open your Home Assistant instance and open a repository inside the Home Assistant Community Store.](https://img.shields.io/badge/My-HACS:%20REPOSITORY-000000.svg?&style=for-the-badge&logo=home-assistant&logoColor=white&color=049cdb)](https://my.home-assistant.io/redirect/hacs_repository/?owner=Ludy87&repository=ipv64&category=integration)
 [![hacs_badge](https://img.shields.io/badge/HACS-Default-orange.svg?style=for-the-badge&logo=home-assistant&logoColor=white)](https://github.com/hacs/integration)
@@ -30,8 +30,9 @@ Own domains can be added and benefit from all IPv64.net features like DynDNS ser
 [![Twitter](https://img.shields.io/static/v1.svg?label=Twitter&message=rpicloud&style=for-the-badge&color=black&logo=twitter&logoColor=white&labelColor=blue)](https://twitter.com/dennis_schroed)
 [![Blog Schroederdennis.de](https://img.shields.io/static/v1.svg?label=Blog&message=rpicloud&style=for-the-badge&color=black&logo=twitter&logoColor=white&labelColor=grey)](https://schroederdennis.de/d)
 
-
 ---
+
+> ## *You need an Account Update Token and an API key to access the IPv64.net API.*
 
 ## Installation
 
