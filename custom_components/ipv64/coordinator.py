@@ -33,7 +33,7 @@ class IPv64DataUpdateCoordinator(DataUpdateCoordinator):
             hass=hass,
             logger=_LOGGER,
             name=f"{DOMAIN}-{entry.entry_id}",
-            update_interval=timedelta(intervale) if intervale > 0 else None,
+            update_interval=timedelta(minutes=intervale) if intervale > 0 else None,
         )
 
     async def _async_update_data(self):
