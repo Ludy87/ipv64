@@ -1,4 +1,4 @@
-"""Support for reading status from IPv64."""
+"""Support for reading status from IPv64.net"""
 from __future__ import annotations
 
 import logging

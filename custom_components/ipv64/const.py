@@ -7,6 +7,8 @@ import voluptuous as vol
 
 from homeassistant.const import CONF_DOMAIN, CONF_SCAN_INTERVAL, CONF_TOKEN
 from homeassistant.helpers.selector import (
+    BooleanSelector,
+    BooleanSelectorConfig,
     NumberSelector,
     NumberSelectorConfig,
     NumberSelectorMode,
@@ -16,6 +18,7 @@ from homeassistant.helpers.selector import (
 )
 
 CONF_API_KEY = "apikey"
+CONF_API_ECONOMY = "api_key_economy"
 
 DOMAIN = "ipv64"
 
@@ -25,6 +28,7 @@ DATA_SCHEMA = {
     vol.Required(CONF_DOMAIN): TextSelector(TextSelectorConfig(type=TextSelectorType.TEXT, multiline=False)),
     vol.Required(CONF_TOKEN): TextSelector(TextSelectorConfig(type=TextSelectorType.TEXT, multiline=False)),
     vol.Required(CONF_API_KEY): TextSelector(TextSelectorConfig(type=TextSelectorType.TEXT, multiline=False)),
+    vol.Required(CONF_API_ECONOMY): BooleanSelector(BooleanSelectorConfig()),
     vol.Required(CONF_SCAN_INTERVAL, default=DEFAULT_INTERVAL): NumberSelector(
         NumberSelectorConfig(mode=NumberSelectorMode.SLIDER, min=0, max=120, unit_of_measurement="minutes")
     ),
