@@ -11,9 +11,15 @@ from homeassistant import config_entries, core
 from homeassistant.const import CONF_DOMAIN, CONF_SCAN_INTERVAL, CONF_TOKEN
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.selector import NumberSelector, NumberSelectorConfig, NumberSelectorMode
+from homeassistant.helpers.selector import (
+    BooleanSelector,
+    BooleanSelectorConfig,
+    NumberSelector,
+    NumberSelectorConfig,
+    NumberSelectorMode,
+)
 
-from .const import CONF_API_KEY, DATA_SCHEMA, DOMAIN, GET_ACCOUNT_INFO_URL, GET_DOMAIN_URL, TIMEOUT
+from .const import CONF_API_ECONOMY, CONF_API_KEY, DATA_SCHEMA, DOMAIN, GET_ACCOUNT_INFO_URL, GET_DOMAIN_URL, TIMEOUT
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -42,7 +48,7 @@ async def check_domain_login(hass: core.HomeAssistant, data: dict[str, str]):
 
 
 async def get_domains(session: aiohttp.ClientSession, headers: dict):
-    """Fetches domain information from the IPv64 API."""
+    """Fetches domain information from the IPv64.net API."""
     async with async_timeout.timeout(TIMEOUT):
         try:
             resp = await session.get(GET_DOMAIN_URL, headers=headers, raise_for_status=True)
@@ -54,7 +60,7 @@ async def get_domains(session: aiohttp.ClientSession, headers: dict):
 
 
 async def get_account_info(data: dict[str, str], result: dict, session: aiohttp.ClientSession, headers: dict) -> dict:
-    """Fetches account information from the IPv64 API and updates the result."""
+    """Fetches account information from the IPv64.net API and updates the result."""
     async with async_timeout.timeout(TIMEOUT):
         try:
             resp_account_info = await session.get(GET_ACCOUNT_INFO_URL, headers=headers, raise_for_status=True)
@@ -120,7 +126,10 @@ class IPv64ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                         CONF_API_KEY: user_input[CONF_API_KEY],
                         CONF_TOKEN: user_input[CONF_TOKEN],
                     },
-                    options={CONF_SCAN_INTERVAL: user_input[CONF_SCAN_INTERVAL]},
+                    options={
+                        CONF_SCAN_INTERVAL: user_input[CONF_SCAN_INTERVAL],
+                        CONF_API_ECONOMY: user_input[CONF_API_ECONOMY],
+                    },
                 )
 
         return self.async_show_form(step_id="user", data_schema=vol.Schema(DATA_SCHEMA), errors=errors, last_step=False)
@@ -134,6 +143,9 @@ class IPv64OptionsFlowHandler(config_entries.OptionsFlowWithConfigEntry):
         options = self.options
         data_schema = vol.Schema(
             {
+                vol.Required(CONF_API_ECONOMY, default=options.get(CONF_API_ECONOMY, False)): BooleanSelector(
+                    BooleanSelectorConfig()
+                ),
                 vol.Required(CONF_SCAN_INTERVAL, default=options.get(CONF_SCAN_INTERVAL, 23)): NumberSelector(
                     NumberSelectorConfig(mode=NumberSelectorMode.SLIDER, min=0, max=120, unit_of_measurement="minutes")
                 ),
