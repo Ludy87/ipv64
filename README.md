@@ -61,6 +61,12 @@ ipv64 should now appear as a card under the HA Integrations page with "Configure
 
 ---
 
+## API Key Sparing
+
+There is a switch to prevent the API key (default: 64) from being used up. The last IP address and the current IP address are compared (<https://checkip.amazonaws.com/>), if it is negative, the IP update function of IPv64.net is called.
+
+---
+
 ## Debug
 
 ```yaml
