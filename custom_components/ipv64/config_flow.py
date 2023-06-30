@@ -19,7 +19,17 @@ from homeassistant.helpers.selector import (
     NumberSelectorMode,
 )
 
-from .const import CONF_API_ECONOMY, CONF_API_KEY, DATA_SCHEMA, DOMAIN, GET_ACCOUNT_INFO_URL, GET_DOMAIN_URL, TIMEOUT
+from .const import (
+    CONF_API_ECONOMY,
+    CONF_API_KEY,
+    CONF_DAILY_UPDATE_LIMIT,
+    CONF_DYNDNS_UPDATES,
+    DATA_SCHEMA,
+    DOMAIN,
+    GET_ACCOUNT_INFO_URL,
+    GET_DOMAIN_URL,
+    TIMEOUT,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -69,8 +79,8 @@ async def get_account_info(data: dict[str, str], result: dict, session: aiohttp.
                 raise APIKeyError()
             result.update(
                 {
-                    "daily_update_limit": account_result["account_class"]["dyndns_update_limit"],
-                    "dyndns_updates": account_result["dyndns_updates"],
+                    CONF_DAILY_UPDATE_LIMIT: account_result["account_class"]["dyndns_update_limit"],
+                    CONF_DYNDNS_UPDATES: account_result[CONF_DYNDNS_UPDATES],
                 }
             )
         except aiohttp.ClientResponseError as error:
