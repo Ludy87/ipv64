@@ -15,12 +15,24 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .config_flow import APIKeyError, get_account_info
-from .const import CONF_API_ECONOMY, CONF_API_KEY, DOMAIN, GET_DOMAIN_URL, TIMEOUT, UPDATE_URL
+from .const import (
+    CHECKIP_URL,
+    CONF_API_ECONOMY,
+    CONF_API_KEY,
+    CONF_DAILY_UPDATE_LIMIT,
+    CONF_DYNDNS_UPDATE_TODAY,
+    CONF_DYNDNS_UPDATES,
+    CONF_WILDCARD,
+    DOMAIN,
+    GET_DOMAIN_URL,
+    TIMEOUT,
+    UPDATE_URL,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
 
-async def get_domain(session, headers, result_account_info, data, config_entry):
+async def get_domain(session: aiohttp.ClientSession, headers: dict, result_account_info, data, config_entry):
     if not isinstance(data, dict):
         return dict(data)
     async with async_timeout.timeout(TIMEOUT):
@@ -28,20 +40,33 @@ async def get_domain(session, headers, result_account_info, data, config_entry):
             resp_get_domain = await session.get(GET_DOMAIN_URL, headers=headers, raise_for_status=True)
             result_get_domain = await resp_get_domain.json()
             result_dict = {
-                "daily_update_limit": result_account_info["daily_update_limit"],
-                "dyndns_updates_today": result_account_info["dyndns_updates"],
-                "wildcard": result_get_domain["subdomains"][config_entry.data[CONF_DOMAIN]]["wildcard"],
+                CONF_DAILY_UPDATE_LIMIT: result_account_info[CONF_DAILY_UPDATE_LIMIT],
+                CONF_DYNDNS_UPDATE_TODAY: result_account_info[CONF_DYNDNS_UPDATES],
+                CONF_WILDCARD: result_get_domain["subdomains"][config_entry.data[CONF_DOMAIN]][CONF_WILDCARD],
                 "total_updates_number": f"{result_get_domain['subdomains'][config_entry.data[CONF_DOMAIN]]['updates']}",
                 CONF_IP_ADDRESS: result_get_domain["subdomains"][config_entry.data[CONF_DOMAIN]]["records"][0]["content"],
                 "last_update": result_get_domain["subdomains"][config_entry.data[CONF_DOMAIN]]["records"][0]["last_update"],
             }
             data.update(result_dict)
+
+            sub_domains_list = []
+
+            for subdomain, values in result_get_domain["subdomains"].items():
+                if subdomain == config_entry.data[CONF_DOMAIN]:
+                    continue
+                more_result_dict = {
+                    CONF_DOMAIN: subdomain,
+                    CONF_IP_ADDRESS: values["records"][0]["content"],
+                    "last_update": values["records"][0]["last_update"],
+                }
+                sub_domains_list.append(more_result_dict)
+            data["subdomains"] = sub_domains_list
         except aiohttp.ClientResponseError as error:
             errors = {
                 "Account Update Token": "incorrect",
-                "daily_update_limit": "unlivable",
-                "dyndns_updates_today": "unlivable",
-                "wildcard": data["wildcard"] if data and "wildcard" in data else "unlivable",
+                CONF_DAILY_UPDATE_LIMIT: "unlivable",
+                CONF_DYNDNS_UPDATE_TODAY: "unlivable",
+                CONF_WILDCARD: data[CONF_WILDCARD] if data and CONF_WILDCARD in data else "unlivable",
                 "total_updates_number": f"{data['total_updates_number']}"
                 if data and "total_updates_number" in data
                 else "unlivable",
@@ -88,8 +113,8 @@ class IPv64DataUpdateCoordinator(DataUpdateCoordinator):
         try:
             result_account_info = await get_account_info(self.config_entry.data, {}, session, headers=headers)
         except APIKeyError:
-            result_account_info["dyndns_updates"] = "unlivable"
-            result_account_info["daily_update_limit"] = "unlivable"
+            result_account_info[CONF_DYNDNS_UPDATES] = "unlivable"
+            result_account_info[CONF_DAILY_UPDATE_LIMIT] = "unlivable"
 
         self.data = await get_domain(session, headers, result_account_info, self.data, self.config_entry)
 
@@ -103,11 +128,11 @@ class IPv64DataUpdateCoordinator(DataUpdateCoordinator):
             _LOGGER.debug("API-KEY-ECONOMY")
             async with async_timeout.timeout(TIMEOUT):
                 try:
-                    request = await session.get("https://checkip.amazonaws.com/", raise_for_status=True)
-                    ip1_obj = ipaddress.ip_address(self.data["ip_address"])
+                    request = await session.get(CHECKIP_URL, raise_for_status=True)
+                    ip1_obj = ipaddress.ip_address(self.data[CONF_IP_ADDRESS])
                     ip2_obj = ipaddress.ip_address((await request.text()).strip())
                     ip_is_not_changed = ip1_obj == ip2_obj
-                except ValueError and KeyError and aiohttp.ClientResponseError:
+                except ValueError or KeyError or aiohttp.ClientResponseError:
                     pass
 
         if not ip_is_not_changed:
@@ -123,8 +148,8 @@ class IPv64DataUpdateCoordinator(DataUpdateCoordinator):
                     if error.status == 429:
                         _LOGGER.error(
                             "Your number of updates has been reached %i of %i. Error: %s | Status: %i",
-                            result_account_info["dyndns_updates"],
-                            result_account_info["daily_update_limit"],
+                            result_account_info[CONF_DYNDNS_UPDATES],
+                            result_account_info[CONF_DAILY_UPDATE_LIMIT],
                             error.message,
                             error.status,
                         )

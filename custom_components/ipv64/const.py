@@ -17,12 +17,16 @@ from homeassistant.helpers.selector import (
     TextSelectorType,
 )
 
-CONF_API_KEY = "apikey"
-CONF_API_ECONOMY = "api_key_economy"
+CONF_API_KEY: Final = "apikey"
+CONF_API_ECONOMY: Final = "api_key_economy"
+CONF_DAILY_UPDATE_LIMIT: Final = "daily_update_limit"
+CONF_DYNDNS_UPDATE_TODAY: Final = "dyndns_updates_today"
+CONF_DYNDNS_UPDATES: Final = "dyndns_updates"
+CONF_WILDCARD: Final = "wildcard"
 
-DOMAIN = "ipv64"
+DOMAIN: Final = "ipv64"
 
-DEFAULT_INTERVAL = 23
+DEFAULT_INTERVAL: Final = 23
 
 DATA_SCHEMA = {
     vol.Required(CONF_DOMAIN): TextSelector(TextSelectorConfig(type=TextSelectorType.TEXT, multiline=False)),
@@ -34,10 +38,11 @@ DATA_SCHEMA = {
     ),
 }
 
-DATA_HASS_CONFIG = "hass_config"
+DATA_HASS_CONFIG: Final = "hass_config"
 TRACKER_UPDATE_STR: Final = f"{DOMAIN}_tracker_update"
 
-TIMEOUT = 10
-UPDATE_URL = "https://ipv64.net/nic/update"
-GET_DOMAIN_URL = "https://ipv64.net/api.php?get_domains"
-GET_ACCOUNT_INFO_URL = "https://ipv64.net/api.php?get_account_info"
+TIMEOUT: Final = 10
+UPDATE_URL: Final = "https://ipv64.net/nic/update"
+GET_DOMAIN_URL: Final = "https://ipv64.net/api.php?get_domains"
+GET_ACCOUNT_INFO_URL: Final = "https://ipv64.net/api.php?get_account_info"
+CHECKIP_URL: Final = "https://checkip.amazonaws.com/"

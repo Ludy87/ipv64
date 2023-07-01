@@ -85,16 +85,51 @@ class IPv64Sensor(IPv64BaseEntity, SensorEntity):
         """Return the extra state attributes of the sensor."""
         data = super().extra_state_attributes or {}
         if self.coordinator.data:
+            if "subdomains" in self.coordinator.data:
+                del self.coordinator.data["subdomains"]
             return dict(data, **self.coordinator.data)
         return dict(data, **{})
+
+
+class IPv64SubSensor(IPv64BaseEntity, SensorEntity):
+    """Sensor entity class for IPv64."""
+
+    _attr_icon = "mdi:ip"
+
+    def __init__(
+        self,
+        subdomain,
+        coordinator: IPv64DataUpdateCoordinator,
+    ) -> None:
+        """Initialize the IPv64 sensor."""
+        super().__init__(coordinator)
+
+        self._subdomain = subdomain
+
+        self._attr_name: str = f"subdomain {subdomain[CONF_DOMAIN]}"
+        self._attr_unique_id = f"subdomain_{subdomain[CONF_DOMAIN]}"
+
+    @property
+    def native_value(self) -> StateType:
+        """Return the native value of the sensor."""
+        return self._subdomain[CONF_IP_ADDRESS]
+
+    @property
+    def extra_state_attributes(self) -> dict[str, any]:
+        """Return the extra state attributes of the sensor."""
+        data = super().extra_state_attributes or {}
+        self._subdomain["update"] = "Update for this domain is not triggered"
+        return dict(data, **self._subdomain)
 
 
 async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry, async_add_entities: AddEntitiesCallback) -> None:
     """Set up the IPv64 sensors from the config entry."""
     coordinator: IPv64DataUpdateCoordinator = hass.data[DOMAIN][config_entry.entry_id]
-    entities: list[IPv64Sensor] = []
+    entities: list = []
 
-    if coordinator.data:
+    if coordinator.data[CONF_DOMAIN]:
         entities.append(IPv64Sensor(coordinator))
-
+    if "subdomains" in coordinator.data and coordinator.data["subdomains"]:
+        for subdomain in coordinator.data["subdomains"]:
+            entities.append(IPv64SubSensor(subdomain, coordinator))
     async_add_entities(entities)
