@@ -37,12 +37,6 @@
 - name: Configuration incorrect
   description: Configuration implemented incorrectly
   color: 8AFF00
-- name: "A: Country Code"
-  description: add Country Code
-  color: "0000FF"
-- name: "R: Country Code"
-  description: remove Country Code
-  color: "FF00FF"
 - name: "Bug: Fix!"
   description: Fix Bug
   color: d73a4a
@@ -55,7 +49,3 @@
 - name: NEWS
   description: Integration News
   color: "016175"
-- name: "Version 1"
-  color: "ff0000"
-- name: "Version 2"
-  color: "5319e7"
