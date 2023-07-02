@@ -59,7 +59,7 @@ jobs:
             commit-message: Update hacs.json file
             committer: GitHub <noreply@github.com>
             author: ${{ github.actor }} <${{ github.actor }}@users.noreply.github.com>
-            signoff: false
+            signoff: true
             branch: "${{ env.version_hassio }}_${{ env.version_hacs }}"
             delete-branch: true
             title: '🔨 Update hacs.json file'
