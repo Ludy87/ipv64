@@ -62,7 +62,7 @@ jobs:
             signoff: true
             branch: "${{ env.version_hassio }}_${{ env.version_hacs }}"
             delete-branch: true
-            title: '🔨 Update hacs.json file'
+            title: '🔨 Update hacs.json file by <${{ github.actor }}>'
             body: |
                 Update report
                 - HACS version: ${{ env.hacs_equal }}
