@@ -34,9 +34,11 @@ jobs:
             echo "hacs=${hacs}" >> $GITHUB_ENV
 
       - name: Check status
+        id: check_status
         run: |
-            echo "${{ env.hacs }}"
-            echo "${{ env.homeassistant }}"
+            if [ "${{ env.version_hacs }}" == "null" ] || [ "${{ env.version_hassio }}" == "null" ]; then
+                echo "match=true" >> $GITHUB_OUTPUT
+            fi
             if [ "${{ env.hacs }}" = "${{ env.version_hacs }}" ]; then
                 echo "hacs_equal=${{ env.hacs }} (no update)" >> $GITHUB_ENV
             else
@@ -49,20 +51,22 @@ jobs:
             fi
 
       - name: Update hacs.json file
+        if: steps.check_status.outputs.match != 'true'
         run: |
             python3 ${{ github.workspace }}/scripts/update/hacs.py --hversion ${{ env.version_hassio }} --version ${{ env.version_hacs }}
 
       - name: Create Pull Request
+        if: steps.check_status.outputs.match != 'true'
         uses: peter-evans/create-pull-request@v5.0.2
         with:
             token: ${{ secrets.GITHUB_TOKEN }}
             commit-message: Update hacs.json file
-            committer: GitHub <noreply@github.com>
-            author: ${{ github.actor }} <${{ github.actor }}@users.noreply.github.com>
+            committer: github-actions[bot] <noreply@github.com>
+            author: github-actions[bot] <noreply@github.com>
             signoff: true
             branch: "${{ env.version_hassio }}_${{ env.version_hacs }}"
             delete-branch: true
-            title: '🔨 Update hacs.json file by <${{ github.actor }}>'
+            title: '🔨 Update hacs.json file by <github-actions[bot]>'
             body: |
                 Update report
                 - HACS version: ${{ env.hacs_equal }}
