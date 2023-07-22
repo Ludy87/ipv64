@@ -48,7 +48,7 @@ async def check_domain_login(hass: core.HomeAssistant, data: dict[str, str]):
 
     session: aiohttp.ClientSession = async_get_clientsession(hass)
 
-    headers = {"Authorization": f"Bearer {data[CONF_TOKEN]}"}
+    headers = {"Authorization": f"Bearer {data[CONF_API_KEY]}"}
 
     result.update(await get_domains(session, headers))
     result.update(await get_account_info(data, result, session, headers))
@@ -75,7 +75,7 @@ async def get_account_info(data: dict[str, str], result: dict, session: aiohttp.
         try:
             resp_account_info = await session.get(GET_ACCOUNT_INFO_URL, headers=headers, raise_for_status=True)
             account_result = await resp_account_info.json()
-            if account_result["update_hash"] != data[CONF_API_KEY]:
+            if account_result["update_hash"] != data[CONF_TOKEN]:
                 raise APIKeyError()
             result.update(
                 {
