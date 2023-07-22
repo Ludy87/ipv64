@@ -132,7 +132,7 @@ class IPv64DataUpdateCoordinator(DataUpdateCoordinator):
                     ip1_obj = ipaddress.ip_address(self.data[CONF_IP_ADDRESS])
                     ip2_obj = ipaddress.ip_address((await request.text()).strip())
                     ip_is_not_changed = ip1_obj == ip2_obj
-                except (ValueError or KeyError or aiohttp.ClientResponseError or aiohttp.ClientConnectorError):
+                except ValueError or KeyError or aiohttp.ClientResponseError or aiohttp.ClientConnectorError:
                     pass
 
         if not ip_is_not_changed:
