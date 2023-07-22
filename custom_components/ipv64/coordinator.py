@@ -9,7 +9,7 @@ import aiohttp
 import async_timeout
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_DOMAIN, CONF_HOST, CONF_IP_ADDRESS, CONF_SCAN_INTERVAL, CONF_TOKEN
+from homeassistant.const import CONF_DOMAIN, CONF_HOST, CONF_IP_ADDRESS, CONF_SCAN_INTERVAL
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
@@ -108,7 +108,7 @@ class IPv64DataUpdateCoordinator(DataUpdateCoordinator):
             self.data = {CONF_DOMAIN: self.config_entry.data[CONF_DOMAIN]}
 
         session: aiohttp.ClientSession = async_get_clientsession(self.hass)
-        headers = {"Authorization": f"Bearer {self.config_entry.data[CONF_TOKEN]}"}
+        headers = {"Authorization": f"Bearer {self.config_entry.data[CONF_API_KEY]}"}
 
         try:
             result_account_info = await get_account_info(self.config_entry.data, {}, session, headers=headers)
@@ -132,7 +132,7 @@ class IPv64DataUpdateCoordinator(DataUpdateCoordinator):
                     ip1_obj = ipaddress.ip_address(self.data[CONF_IP_ADDRESS])
                     ip2_obj = ipaddress.ip_address((await request.text()).strip())
                     ip_is_not_changed = ip1_obj == ip2_obj
-                except ValueError or KeyError or aiohttp.ClientResponseError:
+                except (ValueError or KeyError or aiohttp.ClientResponseError or aiohttp.ClientConnectorError):
                     pass
 
         if not ip_is_not_changed:
