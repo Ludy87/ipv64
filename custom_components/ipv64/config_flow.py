@@ -64,11 +64,7 @@ async def get_domains(session: aiohttp.ClientSession, headers_api: dict):
             resp = await session.get(GET_DOMAIN_URL, headers=headers_api, raise_for_status=True)
             result = dict(await resp.json())
         except aiohttp.ClientResponseError as error:
-            _LOGGER.error(
-                "Your 'API Key' is incorrect. Error: %s | Status: %i",
-                error.message,
-                error.status
-            )
+            _LOGGER.error("Your 'API Key' is incorrect. Error: %s | Status: %i", error.message, error.status)
             raise TokenError() from error
     return result
 
@@ -89,15 +85,11 @@ async def get_account_info(
             result.update(
                 {
                     CONF_DAILY_UPDATE_LIMIT: account_result["account_class"]["dyndns_update_limit"],
-                    CONF_DYNDNS_UPDATES: account_result[CONF_DYNDNS_UPDATES]
+                    CONF_DYNDNS_UPDATES: account_result[CONF_DYNDNS_UPDATES],
                 }
             )
         except aiohttp.ClientResponseError as error:
-            _LOGGER.error(
-                "Your 'API Key' is incorrect. Error: %s | Status: %i",
-                error.message,
-                error.status
-            )
+            _LOGGER.error("Your 'API Key' is incorrect. Error: %s | Status: %i", error.message, error.status)
             raise APIKeyError() from error
     return result
 
@@ -147,20 +139,15 @@ class IPv64ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     data={
                         CONF_DOMAIN: user_input[CONF_DOMAIN],
                         CONF_API_KEY: user_input[CONF_API_KEY],
-                        CONF_TOKEN: user_input[CONF_TOKEN]
+                        CONF_TOKEN: user_input[CONF_TOKEN],
                     },
                     options={
                         CONF_SCAN_INTERVAL: user_input[CONF_SCAN_INTERVAL],
-                        CONF_API_ECONOMY: user_input[CONF_API_ECONOMY]
+                        CONF_API_ECONOMY: user_input[CONF_API_ECONOMY],
                     },
                 )
 
-        return self.async_show_form(
-            step_id="user",
-            data_schema=vol.Schema(DATA_SCHEMA),
-            errors=errors,
-            last_step=False
-        )
+        return self.async_show_form(step_id="user", data_schema=vol.Schema(DATA_SCHEMA), errors=errors, last_step=False)
 
 
 class IPv64OptionsFlowHandler(config_entries.OptionsFlowWithConfigEntry):
@@ -171,20 +158,11 @@ class IPv64OptionsFlowHandler(config_entries.OptionsFlowWithConfigEntry):
         options = self.options
         data_schema = vol.Schema(
             {
-                vol.Required(
-                    CONF_API_ECONOMY,
-                    default=options.get(CONF_API_ECONOMY, False)
-                ): BooleanSelector(BooleanSelectorConfig()),
-                vol.Required(
-                    CONF_SCAN_INTERVAL,
-                    default=options.get(CONF_SCAN_INTERVAL, 23)
-                ): NumberSelector(
-                    NumberSelectorConfig(
-                        mode=NumberSelectorMode.SLIDER,
-                        min=0,
-                        max=120,
-                        unit_of_measurement="minutes"
-                    )
+                vol.Required(CONF_API_ECONOMY, default=options.get(CONF_API_ECONOMY, False)): BooleanSelector(
+                    BooleanSelectorConfig()
+                ),
+                vol.Required(CONF_SCAN_INTERVAL, default=options.get(CONF_SCAN_INTERVAL, 23)): NumberSelector(
+                    NumberSelectorConfig(mode=NumberSelectorMode.SLIDER, min=0, max=120, unit_of_measurement="minutes")
                 ),
             }
         )
