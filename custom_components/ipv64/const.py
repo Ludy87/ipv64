@@ -1,4 +1,4 @@
-"""Const for IPv64"""
+"""Const for IPv64."""
 from __future__ import annotations
 
 from typing import Final
@@ -46,3 +46,5 @@ UPDATE_URL: Final = "https://ipv64.net/nic/update"
 GET_DOMAIN_URL: Final = "https://ipv64.net/api.php?get_domains"
 GET_ACCOUNT_INFO_URL: Final = "https://ipv64.net/api.php?get_account_info"
 CHECKIP_URL: Final = "https://checkip.amazonaws.com/"
+
+SERVICE_REFRESH = "refresh"

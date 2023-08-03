@@ -1,8 +1,8 @@
-"""Support for reading status from IPv64.net"""
+"""Support for reading status from IPv64.net."""
 from __future__ import annotations
 
-import logging
 from collections.abc import Callable
+import logging
 from typing import cast
 
 from homeassistant.components.sensor import RestoreSensor, SensorEntity
@@ -122,7 +122,11 @@ class IPv64SubSensor(IPv64BaseEntity, SensorEntity):
         return dict(data, **self._subdomain)
 
 
-async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry, async_add_entities: AddEntitiesCallback) -> None:
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up the IPv64 sensors from the config entry."""
     coordinator: IPv64DataUpdateCoordinator = hass.data[DOMAIN][config_entry.entry_id]
     entities: list = []
