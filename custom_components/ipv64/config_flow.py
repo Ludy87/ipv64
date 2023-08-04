@@ -1,4 +1,4 @@
-"""Config flow for IPv64"""
+"""Config flow for IPv64."""
 from __future__ import annotations
 
 import logging
@@ -35,11 +35,11 @@ _LOGGER = logging.getLogger(__name__)
 
 
 class TokenError(Exception):
-    """Exception Token"""
+    """Exception Token."""
 
 
 class APIKeyError(Exception):
-    """Exception API Key"""
+    """Exception API Key."""
 
 
 async def check_domain_login(hass: core.HomeAssistant, data: dict[str, str]):
@@ -48,32 +48,37 @@ async def check_domain_login(hass: core.HomeAssistant, data: dict[str, str]):
 
     session: aiohttp.ClientSession = async_get_clientsession(hass)
 
-    headers = {"Authorization": f"Bearer {data[CONF_API_KEY]}"}
+    headers_api = {"Authorization": f"Bearer {data[CONF_API_KEY]}"}
 
-    result.update(await get_domains(session, headers))
-    result.update(await get_account_info(data, result, session, headers))
+    result.update(await get_domains(session, headers_api))
+    result.update(await get_account_info(data, result, session, headers_api))
 
     _LOGGER.debug(result)
     return result
 
 
-async def get_domains(session: aiohttp.ClientSession, headers: dict):
-    """Fetches domain information from the IPv64.net API."""
+async def get_domains(session: aiohttp.ClientSession, headers_api: dict):
+    """Fetches domain information from the IPv64.net API."""  # noqa: D401
     async with async_timeout.timeout(TIMEOUT):
         try:
-            resp = await session.get(GET_DOMAIN_URL, headers=headers, raise_for_status=True)
+            resp = await session.get(GET_DOMAIN_URL, headers=headers_api, raise_for_status=True)
             result = dict(await resp.json())
         except aiohttp.ClientResponseError as error:
-            _LOGGER.error("Your 'Account Update Token' is incorrect. Error: %s | Status: %i", error.message, error.status)
+            _LOGGER.error("Your 'API Key' is incorrect. Error: %s | Status: %i", error.message, error.status)
             raise TokenError() from error
     return result
 
 
-async def get_account_info(data: dict[str, str], result: dict, session: aiohttp.ClientSession, headers: dict) -> dict:
-    """Fetches account information from the IPv64.net API and updates the result."""
+async def get_account_info(
+    data: dict[str, str],
+    result: dict,
+    session: aiohttp.ClientSession,
+    headers_api: dict,
+) -> dict:
+    """Fetches account information from the IPv64.net API and updates the result."""  # noqa: D401
     async with async_timeout.timeout(TIMEOUT):
         try:
-            resp_account_info = await session.get(GET_ACCOUNT_INFO_URL, headers=headers, raise_for_status=True)
+            resp_account_info = await session.get(GET_ACCOUNT_INFO_URL, headers=headers_api, raise_for_status=True)
             account_result = await resp_account_info.json()
             if account_result["update_hash"] != data[CONF_TOKEN]:
                 raise APIKeyError()

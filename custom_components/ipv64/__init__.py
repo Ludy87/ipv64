@@ -1,4 +1,4 @@
-"""Integrate IPv64 at https://ipv64.net/"""
+"""Integrate IPv64 at https://ipv64.net/."""
 from __future__ import annotations
 
 import logging
@@ -7,10 +7,10 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.const import Platform
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers.typing import ConfigType
 
-from .const import DATA_HASS_CONFIG, DATA_SCHEMA, DOMAIN
+from .const import DATA_HASS_CONFIG, DATA_SCHEMA, DOMAIN, SERVICE_REFRESH
 from .coordinator import IPv64DataUpdateCoordinator
 
 PLATFORMS = [Platform.SENSOR]
@@ -48,6 +48,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: config_entries.ConfigEnt
 
     entry.async_on_unload(entry.add_update_listener(options_update_listener))
 
+    async def update(call: ServiceCall) -> None:
+        await coordinator.async_update()
+
+    hass.services.async_register(DOMAIN, SERVICE_REFRESH, update)
+
     return True
 
 
@@ -64,4 +69,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: config_entries.ConfigEn
 
     if unload_ok:
         hass.data[DOMAIN].pop(entry.entry_id)
+    if hass.data[DOMAIN]:
+        hass.services.async_remove(DOMAIN, SERVICE_REFRESH)
+
     return unload_ok

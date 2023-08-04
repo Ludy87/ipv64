@@ -1,15 +1,20 @@
-"""Coordinator for IPv64"""
+"""Coordinator for IPv64."""
 from __future__ import annotations
 
+from datetime import timedelta
 import ipaddress
 import logging
-from datetime import timedelta
 
 import aiohttp
 import async_timeout
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_DOMAIN, CONF_HOST, CONF_IP_ADDRESS, CONF_SCAN_INTERVAL
+from homeassistant.const import (
+    CONF_DOMAIN,
+    CONF_IP_ADDRESS,
+    CONF_SCAN_INTERVAL,
+    CONF_TOKEN,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
@@ -32,7 +37,14 @@ from .const import (
 _LOGGER = logging.getLogger(__name__)
 
 
-async def get_domain(session: aiohttp.ClientSession, headers: dict, result_account_info, data, config_entry):
+async def get_domain(
+    session: aiohttp.ClientSession,
+    headers: dict,
+    result_account_info,
+    data,
+    config_entry,
+):
+    """Fetches domain information from the IPv64.net API."""  # noqa: D401
     if not isinstance(data, dict):
         return dict(data)
     async with async_timeout.timeout(TIMEOUT):
@@ -74,7 +86,11 @@ async def get_domain(session: aiohttp.ClientSession, headers: dict, result_accou
                 "last_update": data["last_update"] if data and "last_update" in data else "unlivable",
             }
             data.update(errors)
-            _LOGGER.error("Your 'Account Update Token' is incorrect. Error: %s | Status: %i", error.message, error.status)
+            _LOGGER.error(
+                "Your 'Update Token' is incorrect. Error: %s | Status: %i",
+                error.message,
+                error.status,
+            )
 
     return data
 
@@ -96,8 +112,13 @@ class IPv64DataUpdateCoordinator(DataUpdateCoordinator):
             update_interval=timedelta(minutes=intervale) if intervale > 0 else None,
         )
 
+    async def async_update(self):
+        """Update IPv64 data from IPv64.net API."""
+        _LOGGER.debug("update IP Address from Service")
+        await self._async_update_data()
+
     async def _async_update_data(self):
-        """Update the data from IPv64.net"""
+        """Update the data from IPv64.net."""
         _LOGGER.debug("Update the data from IPv64.net")
 
         result_account_info = {}
@@ -108,15 +129,16 @@ class IPv64DataUpdateCoordinator(DataUpdateCoordinator):
             self.data = {CONF_DOMAIN: self.config_entry.data[CONF_DOMAIN]}
 
         session: aiohttp.ClientSession = async_get_clientsession(self.hass)
-        headers = {"Authorization": f"Bearer {self.config_entry.data[CONF_API_KEY]}"}
+        headers_api = {"Authorization": f"Bearer {self.config_entry.data[CONF_API_KEY]}"}
+        headers_token = {"Authorization": f"Bearer {self.config_entry.data[CONF_TOKEN]}"}
 
         try:
-            result_account_info = await get_account_info(self.config_entry.data, {}, session, headers=headers)
+            result_account_info = await get_account_info(self.config_entry.data, {}, session, headers_api=headers_api)
         except APIKeyError:
             result_account_info[CONF_DYNDNS_UPDATES] = "unlivable"
             result_account_info[CONF_DAILY_UPDATE_LIMIT] = "unlivable"
 
-        self.data = await get_domain(session, headers, result_account_info, self.data, self.config_entry)
+        self.data = await get_domain(session, headers_api, result_account_info, self.data, self.config_entry)
 
         ip_is_not_changed = False
 
@@ -132,14 +154,22 @@ class IPv64DataUpdateCoordinator(DataUpdateCoordinator):
                     ip1_obj = ipaddress.ip_address(self.data[CONF_IP_ADDRESS])
                     ip2_obj = ipaddress.ip_address((await request.text()).strip())
                     ip_is_not_changed = ip1_obj == ip2_obj
-                except ValueError or KeyError or aiohttp.ClientResponseError or aiohttp.ClientConnectorError:
+                except (
+                    ValueError,
+                    KeyError,
+                    aiohttp.ClientResponseError,
+                    aiohttp.ClientConnectorError,
+                ):
                     pass
 
         if not ip_is_not_changed:
             async with async_timeout.timeout(TIMEOUT):
                 try:
-                    params = {"key": self.config_entry.data[CONF_API_KEY], CONF_HOST: self.config_entry.data[CONF_DOMAIN]}
-                    resp = await session.get(UPDATE_URL, params=params, raise_for_status=True)
+                    resp = await session.get(
+                        f"{UPDATE_URL}?domain={self.config_entry.data[CONF_DOMAIN]}",
+                        headers=headers_token,
+                        raise_for_status=True,
+                    )
                     update_result = await resp.text()
 
                     self.data.update({"update_result": update_result})
@@ -153,6 +183,12 @@ class IPv64DataUpdateCoordinator(DataUpdateCoordinator):
                             error.message,
                             error.status,
                         )
+                    elif error.status == 401:
+                        _LOGGER.error("Error: %s | Status: %i", error.message, error.status)
                     else:
-                        _LOGGER.error("Your 'API Key' is incorrect. Error: %s | Status: %i", error.message, error.status)
+                        _LOGGER.error(
+                            "Your 'Update Token' is incorrect. Error: %s | Status: %i",
+                            error.message,
+                            error.status,
+                        )
         return self.data
