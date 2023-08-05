@@ -15,7 +15,7 @@ from homeassistant.const import (
     CONF_SCAN_INTERVAL,
     CONF_TOKEN,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
@@ -43,10 +43,10 @@ async def get_domain(
     result_account_info,
     data,
     config_entry,
-):
+) -> dict:
     """Fetches domain information from the IPv64.net API."""  # noqa: D401
     if not isinstance(data, dict):
-        return dict(data)
+        data = dict(data)
     async with async_timeout.timeout(TIMEOUT):
         try:
             resp_get_domain = await session.get(GET_DOMAIN_URL, headers=headers, raise_for_status=True)
@@ -112,13 +112,14 @@ class IPv64DataUpdateCoordinator(DataUpdateCoordinator):
             update_interval=timedelta(minutes=intervale) if intervale > 0 else None,
         )
 
-    async def async_update(self):
+    async def async_update(self, call: ServiceCall):
         """Update IPv64 data from IPv64.net API."""
         _LOGGER.debug("update IP Address from Service")
-        await self._async_update_data()
+        economy = call.data.get("economy", False)
+        await self._async_update_data(is_economy=economy)
 
-    async def _async_update_data(self):
-        """Update the data from IPv64.net."""
+    async def _async_update_data(self, is_economy=False):
+        """Update the data from IPv64.net. This method is a coroutine. It will update the data from IPv64."""
         _LOGGER.debug("Update the data from IPv64.net")
 
         result_account_info = {}
@@ -138,31 +139,21 @@ class IPv64DataUpdateCoordinator(DataUpdateCoordinator):
             result_account_info[CONF_DYNDNS_UPDATES] = "unlivable"
             result_account_info[CONF_DAILY_UPDATE_LIMIT] = "unlivable"
 
-        self.data = await get_domain(session, headers_api, result_account_info, self.data, self.config_entry)
+        self.data: dict = await get_domain(session, headers_api, result_account_info, self.data, self.config_entry)
 
-        ip_is_not_changed = False
+        ip_is_changed = False
 
         if (
             hasattr(self.config_entry, "options")
             and CONF_API_ECONOMY in self.config_entry.options
             and self.config_entry.options[CONF_API_ECONOMY]
         ):
-            _LOGGER.debug("API-KEY-ECONOMY")
-            async with async_timeout.timeout(TIMEOUT):
-                try:
-                    request = await session.get(CHECKIP_URL, raise_for_status=True)
-                    ip1_obj = ipaddress.ip_address(self.data[CONF_IP_ADDRESS])
-                    ip2_obj = ipaddress.ip_address((await request.text()).strip())
-                    ip_is_not_changed = ip1_obj == ip2_obj
-                except (
-                    ValueError,
-                    KeyError,
-                    aiohttp.ClientResponseError,
-                    aiohttp.ClientConnectorError,
-                ):
-                    pass
+            ip_is_changed = await self.check_ip_equal(session)
 
-        if not ip_is_not_changed:
+        if is_economy:
+            ip_is_changed = await self.check_ip_equal(session)
+
+        if ip_is_changed:
             async with async_timeout.timeout(TIMEOUT):
                 try:
                     resp = await session.get(
@@ -192,3 +183,21 @@ class IPv64DataUpdateCoordinator(DataUpdateCoordinator):
                             error.status,
                         )
         return self.data
+
+    async def check_ip_equal(self, session):
+        """Check if the ip is equal to the current ip."""
+        _LOGGER.debug("API-KEY-ECONOMY")
+        async with async_timeout.timeout(TIMEOUT):
+            try:
+                request = await session.get(CHECKIP_URL, raise_for_status=True)
+                ip1_obj = ipaddress.ip_address(self.data[CONF_IP_ADDRESS])
+                ip2_obj = ipaddress.ip_address((await request.text()).strip())
+                ip_is_changed = ip1_obj != ip2_obj
+            except (
+                ValueError,
+                KeyError,
+                aiohttp.ClientResponseError,
+                aiohttp.ClientConnectorError,
+            ):
+                pass
+        return ip_is_changed

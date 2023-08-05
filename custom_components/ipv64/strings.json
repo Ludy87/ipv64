@@ -34,5 +34,17 @@
                 }
             }
         }
+    },
+    "services": {
+        "refresh": {
+            "name": "Refresh IP-Address",
+            "description": "The IP address will be updated, please note that 1 out of 64 tokens will be used.",
+            "fields": {
+                "economy": {
+                    "name": "Economy-Modus",
+                    "description": "API key sparing (update is called when IP changes - IP is checked at https://checkip.amazonaws.com/)"
+                }
+            }
+        }
     }
 }
