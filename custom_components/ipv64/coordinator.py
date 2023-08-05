@@ -152,6 +152,8 @@ class IPv64DataUpdateCoordinator(DataUpdateCoordinator):
 
         if is_economy:
             ip_is_changed = await self.check_ip_equal(session)
+        else:
+            ip_is_changed = True
 
         if ip_is_changed:
             async with async_timeout.timeout(TIMEOUT):
@@ -184,15 +186,16 @@ class IPv64DataUpdateCoordinator(DataUpdateCoordinator):
                         )
         return self.data
 
-    async def check_ip_equal(self, session):
+    async def check_ip_equal(self, session) -> bool:
         """Check if the ip is equal to the current ip."""
-        _LOGGER.debug("API-KEY-ECONOMY")
+        _LOGGER.debug("Economy-Modus")
+        ip_changed = True
         async with async_timeout.timeout(TIMEOUT):
             try:
                 request = await session.get(CHECKIP_URL, raise_for_status=True)
                 ip1_obj = ipaddress.ip_address(self.data[CONF_IP_ADDRESS])
                 ip2_obj = ipaddress.ip_address((await request.text()).strip())
-                ip_is_changed = ip1_obj != ip2_obj
+                ip_changed = ip1_obj != ip2_obj
             except (
                 ValueError,
                 KeyError,
@@ -200,4 +203,4 @@ class IPv64DataUpdateCoordinator(DataUpdateCoordinator):
                 aiohttp.ClientConnectorError,
             ):
                 pass
-        return ip_is_changed
+        return ip_changed
