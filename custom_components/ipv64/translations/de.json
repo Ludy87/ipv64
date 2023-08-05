@@ -34,5 +34,17 @@
                 }
             }
         }
+    },
+    "services": {
+        "refresh": {
+            "name": "IP-Adresse aktualisieren",
+            "description": "Die IP-Adresse wird aktualisiert. Bitte beachten Sie, dass dabei 1 von 64 Tokens verwendet wird.",
+            "fields": {
+                "economy": {
+                    "name": "Economy-Modus",
+                    "description": "Schonen des API-Schlüssels (Aktualisierung erfolgt nur, wenn sich die IP-Adresse ändert - IP wird über https://checkip.amazonaws.com/ überprüft)"
+                }
+            }
+        }
     }
 }

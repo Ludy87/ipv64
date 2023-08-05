@@ -49,7 +49,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: config_entries.ConfigEnt
     entry.async_on_unload(entry.add_update_listener(options_update_listener))
 
     async def update(call: ServiceCall) -> None:
-        await coordinator.async_update()
+        await coordinator.async_update(call)
 
     hass.services.async_register(DOMAIN, SERVICE_REFRESH, update)
 

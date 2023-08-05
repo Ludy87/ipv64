@@ -1,3 +1,5 @@
 refresh:
-  name: Refresh IP
-  description: refresh IP Address
+  fields:
+    economy:
+      selector:
+        boolean:
