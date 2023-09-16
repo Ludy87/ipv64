@@ -29,9 +29,7 @@ class IPv64BaseEntity(CoordinatorEntity[IPv64DataUpdateCoordinator], RestoreSens
     def __init__(self, coordinator: IPv64DataUpdateCoordinator) -> None:
         """Initialize the IPv64 base entity."""
         super().__init__(coordinator)
-        self._attr_attribution = (
-            "Data provided by IPv64.net | Free DynDNS2 & Healthcheck Service"
-        )
+        self._attr_attribution = "Data provided by IPv64.net | Free DynDNS2 & Healthcheck Service"
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, f"{self.coordinator.data[CONF_DOMAIN]}")},
             manufacturer="IPv64.net",
@@ -46,9 +44,7 @@ class IPv64BaseEntity(CoordinatorEntity[IPv64DataUpdateCoordinator], RestoreSens
         await super().async_added_to_hass()
         if state := await self.async_get_last_sensor_data():
             self._attr_native_value = cast(float, state.native_value)
-        self._unsub_dispatchers.append(
-            async_dispatcher_connect(self.hass, TRACKER_UPDATE_STR, self.update)
-        )
+        self._unsub_dispatchers.append(async_dispatcher_connect(self.hass, TRACKER_UPDATE_STR, self.update))
 
     async def async_will_remove_from_hass(self) -> None:
         """Clean up before removing the entity."""

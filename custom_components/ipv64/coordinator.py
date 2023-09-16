@@ -49,23 +49,15 @@ async def get_domain(
         data = dict(data)
     async with async_timeout.timeout(TIMEOUT):
         try:
-            resp_get_domain = await session.get(
-                GET_DOMAIN_URL, headers=headers, raise_for_status=True
-            )
+            resp_get_domain = await session.get(GET_DOMAIN_URL, headers=headers, raise_for_status=True)
             result_get_domain = await resp_get_domain.json()
             result_dict = {
                 CONF_DAILY_UPDATE_LIMIT: result_account_info[CONF_DAILY_UPDATE_LIMIT],
                 CONF_DYNDNS_UPDATE_TODAY: result_account_info[CONF_DYNDNS_UPDATES],
-                CONF_WILDCARD: result_get_domain["subdomains"][
-                    config_entry.data[CONF_DOMAIN]
-                ][CONF_WILDCARD],
+                CONF_WILDCARD: result_get_domain["subdomains"][config_entry.data[CONF_DOMAIN]][CONF_WILDCARD],
                 "total_updates_number": f"{result_get_domain['subdomains'][config_entry.data[CONF_DOMAIN]]['updates']}",
-                CONF_IP_ADDRESS: result_get_domain["subdomains"][
-                    config_entry.data[CONF_DOMAIN]
-                ]["records"][0]["content"],
-                "last_update": result_get_domain["subdomains"][
-                    config_entry.data[CONF_DOMAIN]
-                ]["records"][0]["last_update"],
+                CONF_IP_ADDRESS: result_get_domain["subdomains"][config_entry.data[CONF_DOMAIN]]["records"][0]["content"],
+                "last_update": result_get_domain["subdomains"][config_entry.data[CONF_DOMAIN]]["records"][0]["last_update"],
             }
             data.update(result_dict)
 
@@ -86,18 +78,12 @@ async def get_domain(
                 "Account Update Token": "incorrect",
                 CONF_DAILY_UPDATE_LIMIT: "unlivable",
                 CONF_DYNDNS_UPDATE_TODAY: "unlivable",
-                CONF_WILDCARD: data[CONF_WILDCARD]
-                if data and CONF_WILDCARD in data
-                else "unlivable",
+                CONF_WILDCARD: data[CONF_WILDCARD] if data and CONF_WILDCARD in data else "unlivable",
                 "total_updates_number": f"{data['total_updates_number']}"
                 if data and "total_updates_number" in data
                 else "unlivable",
-                CONF_IP_ADDRESS: data[CONF_IP_ADDRESS]
-                if data and CONF_IP_ADDRESS in data
-                else "unlivable",
-                "last_update": data["last_update"]
-                if data and "last_update" in data
-                else "unlivable",
+                CONF_IP_ADDRESS: data[CONF_IP_ADDRESS] if data and CONF_IP_ADDRESS in data else "unlivable",
+                "last_update": data["last_update"] if data and "last_update" in data else "unlivable",
             }
             data.update(errors)
             _LOGGER.error(
@@ -144,24 +130,16 @@ class IPv64DataUpdateCoordinator(DataUpdateCoordinator):
             self.data = {CONF_DOMAIN: self.config_entry.data[CONF_DOMAIN]}
 
         session: aiohttp.ClientSession = async_get_clientsession(self.hass)
-        headers_api = {
-            "Authorization": f"Bearer {self.config_entry.data[CONF_API_KEY]}"
-        }
-        headers_token = {
-            "Authorization": f"Bearer {self.config_entry.data[CONF_TOKEN]}"
-        }
+        headers_api = {"Authorization": f"Bearer {self.config_entry.data[CONF_API_KEY]}"}
+        headers_token = {"Authorization": f"Bearer {self.config_entry.data[CONF_TOKEN]}"}
 
         try:
-            result_account_info = await get_account_info(
-                self.config_entry.data, {}, session, headers_api=headers_api
-            )
+            result_account_info = await get_account_info(self.config_entry.data, {}, session, headers_api=headers_api)
         except APIKeyError:
             result_account_info[CONF_DYNDNS_UPDATES] = "unlivable"
             result_account_info[CONF_DAILY_UPDATE_LIMIT] = "unlivable"
 
-        self.data: dict = await get_domain(
-            session, headers_api, result_account_info, self.data, self.config_entry
-        )
+        self.data: dict = await get_domain(session, headers_api, result_account_info, self.data, self.config_entry)
 
         ip_is_changed = False
 
@@ -199,9 +177,7 @@ class IPv64DataUpdateCoordinator(DataUpdateCoordinator):
                             error.status,
                         )
                     elif error.status == 401:
-                        _LOGGER.error(
-                            "Error: %s | Status: %i", error.message, error.status
-                        )
+                        _LOGGER.error("Error: %s | Status: %i", error.message, error.status)
                     else:
                         _LOGGER.error(
                             "Your 'Update Token' is incorrect. Error: %s | Status: %i",
