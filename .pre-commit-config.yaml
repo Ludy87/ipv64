@@ -65,6 +65,8 @@ repos:
   - repo: local
     hooks:
       - id: black
+        args:
+          - --line-length=127
         name: black
         entry: black
         language: system
