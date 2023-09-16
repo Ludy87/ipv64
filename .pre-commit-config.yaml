@@ -70,3 +70,8 @@ repos:
     hooks:
       - id: pyupgrade
         args: [--py38-plus]
+  - repo: https://github.com/commitizen-tools/commitizen
+    rev: 3.9.0
+    hooks:
+      - id: commitizen
+        stages: ["commit-msg"]
