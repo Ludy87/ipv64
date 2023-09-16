@@ -14,6 +14,7 @@
 [![Buy me a coffee](https://img.shields.io/static/v1.svg?label=Buy%20me%20a%20coffee&message=donate&style=for-the-badge&color=black&logo=buy%20me%20a%20coffee&logoColor=white&labelColor=orange)](https://www.buymeacoffee.com/ludy87)
 
 ---
+
 ![IPv64](https://github.com/Ludy87/ipv64/blob/main/images/ipv64_logo.png?raw=true)
 
 ## What is IPv64.net?
@@ -32,18 +33,18 @@ Own domains can be added and benefit from all IPv64.net features like DynDNS ser
 
 ---
 
-> ## *You need an Account Update Token and an API key to access the IPv64.net API.*
+> ## _You need an Account Update Token and an API key to access the IPv64.net API._
 
 ## Installation
 
 ### MANUAL INSTALLATION
 
-Copy the ipv64 [last Releae](https://github.com/Ludy87/ipv64/releases) folder and all of its contents into your Home Assistant's custom_components folder. This folder is usually inside your /config folder. If you are running Hass.io, use SAMBA to copy the folder over. If you are running Home Assistant Supervised, the custom_components folder might be located at /usr/share/hassio/homeassistant. You may need to create the custom_components folder and then copy the localtuya folder and all of its contents into it Alternatively, you can install localtuya through HACS by adding this repository.
+Copy the ipv64 [last Release](https://github.com/Ludy87/ipv64/releases) folder and all of its contents into your Home Assistant's custom_components folder. This folder is usually inside your /config folder. If you are running Hass.io, use SAMBA to copy the folder over. If you are running Home Assistant Supervised, the custom_components folder might be located at /usr/share/hassio/homeassistant. You may need to create the custom_components folder and then copy the localtuya folder and all of its contents into it Alternatively, you can install localtuya through HACS by adding this repository.
 
 ### INSTALLATION mit HACS
 
 1. Ensure that [HACS](https://hacs.xyz/) is installed.
-2. Search for and install the "__ipv64 Integration__" integration. [![GitHub release (latest by date)](https://img.shields.io/github/v/release/Ludy87/ipv64?style=for-the-badge&logo=GitHub)](https://github.com/Ludy87/ipv64/releases)
+2. Search for and install the "**ipv64 Integration**" integration. [![GitHub release (latest by date)](https://img.shields.io/github/v/release/Ludy87/ipv64?style=for-the-badge&logo=GitHub)](https://github.com/Ludy87/ipv64/releases)
 3. [Configuration for the `ipv64` integration is now performed via a config flow as opposed to yaml configuration file.](https://github.com/Ludy87/ipv64#basis-configuration)
 4. Restart Home Assistant.
 
