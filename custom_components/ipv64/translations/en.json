@@ -1,50 +1,50 @@
 {
-    "config": {
-        "abort": {
-            "already_configured": "Integration has already been configured",
-            "single_instance_allowed": "Already configured. Only a single configuration is allowed."
-        },
-        "error": {
-            "unauthorized": "Your 'Account Update Token' is incorrect.",
-            "domain_not_found": "Domain not found",
-            "invalid_api_key": "Invalid API key."
-        },
-        "step": {
-            "user": {
-                "title": "IPv64.net | Free DynDNS2 & Healthcheck Service",
-                "description": "With IPv64.net you can manage your domains and use various features including DynDNS updates, wildcard support and healthchecks. The service also offers an API that you can use to access its features and manage your domains.\n\nYou need an Account Update Token and an API key to access the IPv64.net API. You can use this information to manage your domains, make updates, and get more information about your account.",
-                "data": {
-                    "domain": "Domain",
-                    "token": "Account Update Token",
-                    "apikey": "API Key",
-                    "scan_interval": "Update time (0-120 minutes 0=disabled)",
-                    "api_key_economy": "API key sparing (update is called when IP changes - IP is checked at https://checkip.amazonaws.com/)"
-                }
-            }
-        }
+  "config": {
+    "abort": {
+      "already_configured": "Integration has already been configured",
+      "single_instance_allowed": "Already configured. Only a single configuration is allowed."
     },
-    "options": {
-        "step": {
-            "init": {
-                "title": "update time",
-                "description": "Please note that it depends on your account status how many IP address updates can take place. With the free account, there are 64 requests per day.\n\nThe optimal setting is 23 minutes (24:64x60=22.5 minutes)",
-                "data": {
-                    "scan_interval": "Update time (0-120 minutes 0=disabled)",
-                    "api_key_economy": "API key sparing (update is called when IP changes - IP is checked at https://checkip.amazonaws.com/)"
-                }
-            }
-        }
+    "error": {
+      "unauthorized": "Your 'Account Update Token' is incorrect.",
+      "domain_not_found": "Domain not found",
+      "invalid_api_key": "Invalid API key."
     },
-    "services": {
-        "refresh": {
-            "name": "Refresh IP-Address",
-            "description": "The IP address will be updated, please note that 1 out of 64 tokens will be used.",
-            "fields": {
-                "economy": {
-                    "name": "Economy-Modus",
-                    "description": "API key sparing (update is called when IP changes - IP is checked at https://checkip.amazonaws.com/)"
-                }
-            }
+    "step": {
+      "user": {
+        "title": "IPv64.net | Free DynDNS2 & Healthcheck Service",
+        "description": "With IPv64.net you can manage your domains and use various features including DynDNS updates, wildcard support and healthchecks. The service also offers an API that you can use to access its features and manage your domains.\n\nYou need an Account Update Token and an API key to access the IPv64.net API. You can use this information to manage your domains, make updates, and get more information about your account.",
+        "data": {
+          "domain": "Domain",
+          "token": "Account Update Token",
+          "apikey": "API Key",
+          "scan_interval": "Update time (0-120 minutes 0=disabled)",
+          "api_key_economy": "API key sparing (update is called when IP changes - IP is checked at https://checkip.amazonaws.com/)"
         }
+      }
     }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "update time",
+        "description": "Please note that it depends on your account status how many IP address updates can take place. With the free account, there are 64 requests per day.\n\nThe optimal setting is 23 minutes (24:64x60=22.5 minutes)",
+        "data": {
+          "scan_interval": "Update time (0-120 minutes 0=disabled)",
+          "api_key_economy": "API key sparing (update is called when IP changes - IP is checked at https://checkip.amazonaws.com/)"
+        }
+      }
+    }
+  },
+  "services": {
+    "refresh": {
+      "name": "Refresh IP-Address",
+      "description": "The IP address will be updated, please note that 1 out of 64 tokens will be used.",
+      "fields": {
+        "economy": {
+          "name": "Economy-Modus",
+          "description": "API key sparing (update is called when IP changes - IP is checked at https://checkip.amazonaws.com/)"
+        }
+      }
+    }
+  }
 }

@@ -1,50 +1,50 @@
 {
-    "config": {
-        "abort": {
-            "already_configured": "Die Integration wurde bereits konfiguriert.",
-            "single_instance_allowed": "Bereits konfiguriert. Es ist nur eine einzige Konfiguration erlaubt."
-        },
-        "error": {
-            "unauthorized": "Dein 'Account Update Token' ist falsch.",
-            "domain_not_found": "Domain nicht gefunden.",
-            "invalid_api_key": "Ungültiger API-Schlüssel."
-        },
-        "step": {
-            "user": {
-                "title": "IPv64.net | Kostenloser DynDNS2- und Healthcheck-Dienst",
-                "description": "Mit IPv64.net können Sie Ihre Domänen verwalten und verschiedene Funktionen nutzen, darunter DynDNS-Updates, Wildcard-Unterstützung und Healthchecks. Der Dienst bietet auch eine API, über die Sie auf die Funktionen zugreifen und Ihre Domänen verwalten können.\n\nSie benötigen einen Account Update Token und einen API-Schlüssel, um auf die IPv64.net-API zugreifen zu können. Mit diesen Informationen können Sie Ihre Domänen verwalten, Updates durchführen und weitere Informationen zu Ihrem Konto abrufen.",
-                "data": {
-                    "domain": "Domain",
-                    "token": "Account Update Token",
-                    "apikey": "API-Schlüssel",
-                    "scan_interval": "Aktualisierungszeit (0-120 Minuten 0=deaktiviert)",
-                    "api_key_economy": "API-Key Sparsamkeit (Update wird aufgerufen, wenn die IP sich ändert - IP wird bei https://checkip.amazonaws.com/ geprüft)"
-                }
-            }
-        }
+  "config": {
+    "abort": {
+      "already_configured": "Die Integration wurde bereits konfiguriert.",
+      "single_instance_allowed": "Bereits konfiguriert. Es ist nur eine einzige Konfiguration erlaubt."
     },
-    "options": {
-        "step": {
-            "init": {
-                "title": "Aktualisierungszeit",
-                "description": "Bitte beachte, dass je nach Kontostatus die Anzahl der IP-Adressaktualisierungen begrenzt sein kann. Mit dem kostenlosen Konto sind 64 Anfragen pro Tag möglich.\n\nDie optimale Einstellung beträgt 23 Minuten (24:64x60=22,5 Minuten).",
-                "data": {
-                    "scan_interval": "Aktualisierungszeit (0-120 Minuten 0=deaktiviert)",
-                    "api_key_economy": "API-Key Sparsamkeit (Update wird aufgerufen, wenn die IP sich ändert - IP wird bei https://checkip.amazonaws.com/ geprüft)"
-                }
-            }
-        }
+    "error": {
+      "unauthorized": "Dein 'Account Update Token' ist falsch.",
+      "domain_not_found": "Domain nicht gefunden.",
+      "invalid_api_key": "Ungültiger API-Schlüssel."
     },
-    "services": {
-        "refresh": {
-            "name": "IP-Adresse aktualisieren",
-            "description": "Die IP-Adresse wird aktualisiert. Bitte beachten Sie, dass dabei 1 von 64 Tokens verwendet wird.",
-            "fields": {
-                "economy": {
-                    "name": "Economy-Modus",
-                    "description": "Schonen des API-Schlüssels (Aktualisierung erfolgt nur, wenn sich die IP-Adresse ändert - IP wird über https://checkip.amazonaws.com/ überprüft)"
-                }
-            }
+    "step": {
+      "user": {
+        "title": "IPv64.net | Kostenloser DynDNS2- und Healthcheck-Dienst",
+        "description": "Mit IPv64.net können Sie Ihre Domänen verwalten und verschiedene Funktionen nutzen, darunter DynDNS-Updates, Wildcard-Unterstützung und Healthchecks. Der Dienst bietet auch eine API, über die Sie auf die Funktionen zugreifen und Ihre Domänen verwalten können.\n\nSie benötigen einen Account Update Token und einen API-Schlüssel, um auf die IPv64.net-API zugreifen zu können. Mit diesen Informationen können Sie Ihre Domänen verwalten, Updates durchführen und weitere Informationen zu Ihrem Konto abrufen.",
+        "data": {
+          "domain": "Domain",
+          "token": "Account Update Token",
+          "apikey": "API-Schlüssel",
+          "scan_interval": "Aktualisierungszeit (0-120 Minuten 0=deaktiviert)",
+          "api_key_economy": "API-Key Sparsamkeit (Update wird aufgerufen, wenn die IP sich ändert - IP wird bei https://checkip.amazonaws.com/ geprüft)"
         }
+      }
     }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Aktualisierungszeit",
+        "description": "Bitte beachte, dass je nach Kontostatus die Anzahl der IP-Adressaktualisierungen begrenzt sein kann. Mit dem kostenlosen Konto sind 64 Anfragen pro Tag möglich.\n\nDie optimale Einstellung beträgt 23 Minuten (24:64x60=22,5 Minuten).",
+        "data": {
+          "scan_interval": "Aktualisierungszeit (0-120 Minuten 0=deaktiviert)",
+          "api_key_economy": "API-Key Sparsamkeit (Update wird aufgerufen, wenn die IP sich ändert - IP wird bei https://checkip.amazonaws.com/ geprüft)"
+        }
+      }
+    }
+  },
+  "services": {
+    "refresh": {
+      "name": "IP-Adresse aktualisieren",
+      "description": "Die IP-Adresse wird aktualisiert. Bitte beachten Sie, dass dabei 1 von 64 Tokens verwendet wird.",
+      "fields": {
+        "economy": {
+          "name": "Economy-Modus",
+          "description": "Schonen des API-Schlüssels (Aktualisierung erfolgt nur, wenn sich die IP-Adresse ändert - IP wird über https://checkip.amazonaws.com/ überprüft)"
+        }
+      }
+    }
+  }
 }

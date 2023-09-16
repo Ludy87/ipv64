@@ -1,18 +1,13 @@
 {
-    "domain": "ipv64",
-    "name": "IPv64",
-    "codeowners": [
-        "@Ludy87"
-    ],
-    "config_flow": true,
-    "dependencies": [],
-    "documentation": "https://github.com/Ludy87/ipv64/tree/main",
-    "integration_type": "device",
-    "iot_class": "cloud_polling",
-    "issue_tracker": "https://github.com/Ludy87/ipv64/issues",
-    "requirements": [
-        "aiohttp==3.8.5",
-        "async-timeout==4.0.3"
-    ],
-    "version": "1.5.3"
+  "domain": "ipv64",
+  "name": "IPv64",
+  "codeowners": ["@Ludy87"],
+  "config_flow": true,
+  "dependencies": [],
+  "documentation": "https://github.com/Ludy87/ipv64/tree/main",
+  "integration_type": "device",
+  "iot_class": "cloud_polling",
+  "issue_tracker": "https://github.com/Ludy87/ipv64/issues",
+  "requirements": ["aiohttp==3.8.5", "async-timeout==4.0.3"],
+  "version": "1.5.3"
 }

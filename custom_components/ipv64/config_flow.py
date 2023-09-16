@@ -61,10 +61,16 @@ async def get_domains(session: aiohttp.ClientSession, headers_api: dict):
     """Fetches domain information from the IPv64.net API."""  # noqa: D401
     async with async_timeout.timeout(TIMEOUT):
         try:
-            resp = await session.get(GET_DOMAIN_URL, headers=headers_api, raise_for_status=True)
+            resp = await session.get(
+                GET_DOMAIN_URL, headers=headers_api, raise_for_status=True
+            )
             result = dict(await resp.json())
         except aiohttp.ClientResponseError as error:
-            _LOGGER.error("Your 'API Key' is incorrect. Error: %s | Status: %i", error.message, error.status)
+            _LOGGER.error(
+                "Your 'API Key' is incorrect. Error: %s | Status: %i",
+                error.message,
+                error.status,
+            )
             raise TokenError() from error
     return result
 
@@ -78,23 +84,33 @@ async def get_account_info(
     """Fetches account information from the IPv64.net API and updates the result."""  # noqa: D401
     async with async_timeout.timeout(TIMEOUT):
         try:
-            resp_account_info = await session.get(GET_ACCOUNT_INFO_URL, headers=headers_api, raise_for_status=True)
+            resp_account_info = await session.get(
+                GET_ACCOUNT_INFO_URL, headers=headers_api, raise_for_status=True
+            )
             account_result = await resp_account_info.json()
             if account_result["update_hash"] != data[CONF_TOKEN]:
                 raise APIKeyError()
             result.update(
                 {
-                    CONF_DAILY_UPDATE_LIMIT: account_result["account_class"]["dyndns_update_limit"],
+                    CONF_DAILY_UPDATE_LIMIT: account_result["account_class"][
+                        "dyndns_update_limit"
+                    ],
                     CONF_DYNDNS_UPDATES: account_result[CONF_DYNDNS_UPDATES],
                 }
             )
         except aiohttp.ClientResponseError as error:
-            _LOGGER.error("Your 'API Key' is incorrect. Error: %s | Status: %i", error.message, error.status)
+            _LOGGER.error(
+                "Your 'API Key' is incorrect. Error: %s | Status: %i",
+                error.message,
+                error.status,
+            )
             raise APIKeyError() from error
     return result
 
 
-async def validate_input(hass: core.HomeAssistant, data: dict[str, str]) -> dict[str, str]:
+async def validate_input(
+    hass: core.HomeAssistant, data: dict[str, str]
+) -> dict[str, str]:
     """Validate the user input for domain login."""
     result = await check_domain_login(hass, data)
     return {"title": f"{DOMAIN} {data[CONF_DOMAIN]}", "data": result}
@@ -147,26 +163,42 @@ class IPv64ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     },
                 )
 
-        return self.async_show_form(step_id="user", data_schema=vol.Schema(DATA_SCHEMA), errors=errors, last_step=False)
+        return self.async_show_form(
+            step_id="user",
+            data_schema=vol.Schema(DATA_SCHEMA),
+            errors=errors,
+            last_step=False,
+        )
 
 
 class IPv64OptionsFlowHandler(config_entries.OptionsFlowWithConfigEntry):
     """Handle the options flow for IPv64."""
 
-    async def async_step_init(self, user_input: dict[str, any] | None = None) -> FlowResult:
+    async def async_step_init(
+        self, user_input: dict[str, any] | None = None
+    ) -> FlowResult:
         """Handle the options flow initialization step."""
         options = self.options
         data_schema = vol.Schema(
             {
-                vol.Required(CONF_API_ECONOMY, default=options.get(CONF_API_ECONOMY, False)): BooleanSelector(
-                    BooleanSelectorConfig()
-                ),
-                vol.Required(CONF_SCAN_INTERVAL, default=options.get(CONF_SCAN_INTERVAL, 23)): NumberSelector(
-                    NumberSelectorConfig(mode=NumberSelectorMode.SLIDER, min=0, max=120, unit_of_measurement="minutes")
+                vol.Required(
+                    CONF_API_ECONOMY, default=options.get(CONF_API_ECONOMY, False)
+                ): BooleanSelector(BooleanSelectorConfig()),
+                vol.Required(
+                    CONF_SCAN_INTERVAL, default=options.get(CONF_SCAN_INTERVAL, 23)
+                ): NumberSelector(
+                    NumberSelectorConfig(
+                        mode=NumberSelectorMode.SLIDER,
+                        min=0,
+                        max=120,
+                        unit_of_measurement="minutes",
+                    )
                 ),
             }
         )
         if user_input is not None:
             return self.async_create_entry(data=user_input)
 
-        return self.async_show_form(step_id="init", data_schema=data_schema, last_step=True)
+        return self.async_show_form(
+            step_id="init", data_schema=data_schema, last_step=True
+        )

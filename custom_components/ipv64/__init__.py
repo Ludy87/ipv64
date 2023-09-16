@@ -35,7 +35,9 @@ async def async_setup(hass: HomeAssistant, hass_config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: config_entries.ConfigEntry) -> bool:
+async def async_setup_entry(
+    hass: HomeAssistant, entry: config_entries.ConfigEntry
+) -> bool:
     """Configure based on config entry."""
     _LOGGER.debug("Configure based on config entry %s", entry.entry_id)
     coordinator = IPv64DataUpdateCoordinator(hass, entry)
@@ -56,13 +58,17 @@ async def async_setup_entry(hass: HomeAssistant, entry: config_entries.ConfigEnt
     return True
 
 
-async def options_update_listener(hass: HomeAssistant, config_entry: config_entries.ConfigEntry) -> None:
+async def options_update_listener(
+    hass: HomeAssistant, config_entry: config_entries.ConfigEntry
+) -> None:
     """Handle options update."""
     _LOGGER.debug("Configuration options updated, reloading IPv64.net integration")
     await hass.config_entries.async_reload(config_entry.entry_id)
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: config_entries.ConfigEntry) -> bool:
+async def async_unload_entry(
+    hass: HomeAssistant, entry: config_entries.ConfigEntry
+) -> bool:
     """Unload a config entry."""
     _LOGGER.debug("Unload a config entry")
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)

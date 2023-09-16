@@ -29,12 +29,23 @@ DOMAIN: Final = "ipv64"
 DEFAULT_INTERVAL: Final = 23
 
 DATA_SCHEMA = {
-    vol.Required(CONF_DOMAIN): TextSelector(TextSelectorConfig(type=TextSelectorType.TEXT, multiline=False)),
-    vol.Required(CONF_TOKEN): TextSelector(TextSelectorConfig(type=TextSelectorType.TEXT, multiline=False)),
-    vol.Required(CONF_API_KEY): TextSelector(TextSelectorConfig(type=TextSelectorType.TEXT, multiline=False)),
+    vol.Required(CONF_DOMAIN): TextSelector(
+        TextSelectorConfig(type=TextSelectorType.TEXT, multiline=False)
+    ),
+    vol.Required(CONF_TOKEN): TextSelector(
+        TextSelectorConfig(type=TextSelectorType.TEXT, multiline=False)
+    ),
+    vol.Required(CONF_API_KEY): TextSelector(
+        TextSelectorConfig(type=TextSelectorType.TEXT, multiline=False)
+    ),
     vol.Required(CONF_API_ECONOMY): BooleanSelector(BooleanSelectorConfig()),
     vol.Required(CONF_SCAN_INTERVAL, default=DEFAULT_INTERVAL): NumberSelector(
-        NumberSelectorConfig(mode=NumberSelectorMode.SLIDER, min=0, max=120, unit_of_measurement="minutes")
+        NumberSelectorConfig(
+            mode=NumberSelectorMode.SLIDER,
+            min=0,
+            max=120,
+            unit_of_measurement="minutes",
+        )
     ),
 }
 
