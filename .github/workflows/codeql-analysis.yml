@@ -44,8 +44,7 @@ jobs:
         uses: actions/setup-python@v4.7.0
         with:
           python-version: |
-            3.11
-            3.12
+            3.x
           check-latest: true
           allow-prereleases: true
       - name: Install dependencies
