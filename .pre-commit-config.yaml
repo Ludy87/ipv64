@@ -38,6 +38,7 @@ repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v4.4.0
     hooks:
+      - id: check-ast
       - id: check-yaml
       - id: check-json
         exclude: (.vscode|.devcontainer)
@@ -48,8 +49,10 @@ repos:
         args: [--allow-missing-credentials]
       - id: detect-private-key
       - id: end-of-file-fixer
+        exclude_types: [json]
       - id: forbid-new-submodules
       - id: mixed-line-ending
+        args: [--fix=lf]
       - id: trailing-whitespace
   - repo: https://github.com/cdce8p/python-typing-update
     rev: v0.6.0
