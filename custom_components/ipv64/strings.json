@@ -5,46 +5,46 @@
       "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]"
     },
     "error": {
-      "unauthorized": "Your 'Account Update Token' is incorrect.",
       "domain_not_found": "Domain not found",
-      "invalid_api_key": "[%key:common::config_flow::error::invalid_api_key%]"
+      "invalid_api_key": "[%key:common::config_flow::error::invalid_api_key%]",
+      "unauthorized": "Your 'Account Update Token' is incorrect."
     },
     "step": {
       "user": {
-        "title": "IPv64.net | Free DynDNS2 & Healthcheck Service",
-        "description": "DynDNS2 is a service through which a computer is always accessible under the same domain name despite changing IP address. In the age of more and more devices with IPv6 usage, the DynDNS service becomes more and more important.",
         "data": {
-          "domain": "Domain",
-          "token": "Account Update Token",
+          "api_key_economy": "API key sparing (update is called when IP changes - IP is checked at https://checkip.amazonaws.com/)",
           "apikey": "API Key",
+          "domain": "Domain",
           "scan_interval": "Update time (0-120 minutes 0=disabled)",
-          "api_key_economy": "API key sparing (update is called when IP changes - IP is checked at https://checkip.amazonaws.com/)"
-        }
+          "token": "Account Update Token"
+        },
+        "description": "DynDNS2 is a service through which a computer is always accessible under the same domain name despite changing IP address. In the age of more and more devices with IPv6 usage, the DynDNS service becomes more and more important.",
+        "title": "IPv64.net | Free DynDNS2 & Healthcheck Service"
       }
     }
   },
   "options": {
     "step": {
       "init": {
-        "title": "update time",
-        "description": "Please note that it depends on your account status how many IP address updates can take place. With the free account, there are 64 requests per day.\n\nThe optimal setting is 23 minutes (24:64x60=22.5 minutes)",
         "data": {
-          "scan_interval": "Update time (0-120 minutes 0=disabled)",
-          "api_key_economy": "API key sparing (update is called when IP changes - IP is checked at https://checkip.amazonaws.com/)"
-        }
+          "api_key_economy": "API key sparing (update is called when IP changes - IP is checked at https://checkip.amazonaws.com/)",
+          "scan_interval": "Update time (0-120 minutes 0=disabled)"
+        },
+        "description": "Please note that it depends on your account status how many IP address updates can take place. With the free account, there are 64 requests per day.\n\nThe optimal setting is 23 minutes (24:64x60=22.5 minutes)",
+        "title": "update time"
       }
     }
   },
   "services": {
     "refresh": {
-      "name": "Refresh IP-Address",
       "description": "The IP address will be updated, please note that 1 out of 64 tokens will be used.",
       "fields": {
         "economy": {
-          "name": "Economy-Modus",
-          "description": "API key sparing (update is called when IP changes - IP is checked at https://checkip.amazonaws.com/)"
+          "description": "API key sparing (update is called when IP changes - IP is checked at https://checkip.amazonaws.com/)",
+          "name": "Economy-Modus"
         }
-      }
+      },
+      "name": "Refresh IP-Address"
     }
   }
 }
