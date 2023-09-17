@@ -40,10 +40,14 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4.0.0
-      - name: Set up Python
+      - name: Set up Python 3
         uses: actions/setup-python@v4.7.0
         with:
-          python-version: '3.11'
+          python-version: |
+            3.11
+            3.12
+          check-latest: true
+          allow-prereleases: true
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
