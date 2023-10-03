@@ -19,7 +19,6 @@ jobs:
         with:
           python-version: |
             3.11
-            3.12
           check-latest: true
           allow-prereleases: true
       - name: Get Version

@@ -71,8 +71,10 @@ repos:
           - --force
           - --keep-updates
         files: ^(custom_components|tests|script)/.+\.py$
+        additional_dependencies:
+          - black==23.9.1
   - repo: https://github.com/asottile/pyupgrade
     rev: v3.11.0
     hooks:
       - id: pyupgrade
-        args: [--py38-plus]
+        args: [--py311-plus]
