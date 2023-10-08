@@ -6,7 +6,7 @@
         "US"
     ],
     "render_readme": true,
-    "homeassistant": "2023.9.2",
-    "hacs": "1.32.1",
+    "homeassistant": "2023.10.1",
+    "hacs": "1.33.0",
     "filename": "ipv64.zip"
 }
