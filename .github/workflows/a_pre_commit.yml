@@ -1,8 +1,9 @@
-name: a Pre-commit
+name: Pre-commit
 
 on:
-  pull_request:
-    types: [opened, reopened]
+  pull_request_target:
+  push:
+    branches: [main]
 
 permissions:
   contents: write
@@ -10,16 +11,18 @@ permissions:
 
 jobs:
   update:
+    if: ${{ github.event.pull_request.user.login != 'dependabot[bot]' }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v4.1.1
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
+          token: ${{ secrets.TOKEN }}
       - name: Set up Python
         uses: actions/setup-python@v4.7.1
         with:
-          python-version: '3.9'
+          python-version: |
+            3.11
       - name: Install Dependencies
         run: |
           pip install pre-commit
@@ -30,7 +33,7 @@ jobs:
       - name: Create Pull Request
         uses: peter-evans/create-pull-request@v5.0.2
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
+          token: ${{ secrets.TOKEN }}
           commit-message: Update files
           committer: GitHub Action <action@github.com>
           author: GitHub Action <action@github.com>
