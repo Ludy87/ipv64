@@ -1,0 +1,50 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "Integrácia už bola nakonfigurovaná",
+      "single_instance_allowed": "Už je nakonfigurovaný. Je povolená iba jedna konfigurácia."
+    },
+    "error": {
+      "domain_not_found": "Doména sa nenašla",
+      "invalid_api_key": "Neplatný kľúč API.",
+      "unauthorized": "Váš 'Token aktualizácie účtu' je nesprávny."
+    },
+    "step": {
+      "user": {
+        "data": {
+          "api_key_economy": "Šetrenie kľúčov API (aktualizácia sa volá pri zmene IP - IP sa kontroluje na https://checkip.amazonaws.com/)",
+          "apikey": "API kľúč",
+          "domain": "Doména",
+          "scan_interval": "Čas aktualizácie (0–120 minút 0=vypnuté)",
+          "token": "Token aktualizácie účtu"
+        },
+        "description": "S IPv64.net môžete spravovať svoje domény a používať rôzne funkcie vrátane aktualizácií DynDNS, podpory zástupných znakov a zdravotných kontrol. Služba ponúka aj API, pomocou ktorého môžete pristupovať k jej funkciám a spravovať svoje domény.\n\nNa prístup k IPv64.net API potrebujete token aktualizácie účtu a kľúč API. Pomocou týchto informácií môžete spravovať svoje domény, vykonávať aktualizácie a získavať ďalšie informácie o svojom účte.",
+        "title": "IPv64.net | Zdarma DynDNS2 & Healthcheck Service"
+      }
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "api_key_economy": "Šetrenie kľúčov API (aktualizácia sa volá pri zmene IP - IP sa kontroluje na https://checkip.amazonaws.com/)",
+          "scan_interval": "Čas aktualizácie (0–120 minút 0=vypnuté)"
+        },
+        "description": "Upozorňujeme, že počet aktualizácií adresy IP závisí od stavu vášho účtu. S bezplatným účtom je 64 žiadostí za deň.\n\nOptimálne nastavenie je 23 minút (24:64x60=22.5 minút)",
+        "title": "čas aktualizácie"
+      }
+    }
+  },
+  "services": {
+    "refresh": {
+      "description": "IP adresa bude aktualizovaná. Upozorňujeme, že sa použije 1 zo 64 tokenov.",
+      "fields": {
+        "economy": {
+          "description": "Šetrenie kľúčov API (aktualizácia sa volá pri zmene IP - IP sa kontroluje na https://checkip.amazonaws.com/)",
+          "name": "Economy-Modus"
+        }
+      },
+      "name": "Obnoviť IP-adresu"
+    }
+  }
+}
