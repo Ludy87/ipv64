@@ -1,0 +1,7 @@
+# Add 'in progress' label to any root file changes
+in progress:
+- '**'
+
+# Add 'wait' label to any root file changes
+wait:
+- '**'
