@@ -12,14 +12,14 @@ ci:
 
 repos:
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.1.1
+    rev: v0.1.6
     hooks:
       - id: ruff
         args:
           - --fix
           - --line-length=127
   - repo: https://github.com/psf/black-pre-commit-mirror
-    rev: 23.10.0
+    rev: 23.11.0
     hooks:
       - id: black
         args:
