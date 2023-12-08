@@ -19,12 +19,7 @@ PLATFORMS = [Platform.SENSOR]
 _LOGGER = logging.getLogger(__name__)
 
 
-CONFIG_SCHEMA = vol.Schema(
-    {
-        DOMAIN: vol.Schema(DATA_SCHEMA),
-    },
-    extra=vol.ALLOW_EXTRA,
-)
+CONFIG_SCHEMA = vol.Schema({DOMAIN: vol.Schema(DATA_SCHEMA)}, extra=vol.ALLOW_EXTRA)
 
 
 async def async_setup(hass: HomeAssistant, hass_config: ConfigType) -> bool:

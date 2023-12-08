@@ -9,7 +9,7 @@ from homeassistant.components.sensor import RestoreSensor, SensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_DOMAIN, CONF_IP_ADDRESS
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import DeviceInfo  # Dev branch
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
