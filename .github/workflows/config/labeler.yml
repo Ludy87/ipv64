@@ -1,7 +1,9 @@
 # Add 'in progress' label to any root file changes
 in progress:
-- '**'
+- changed-files:
+  - any-glob-to-any-file: '**'
 
 # Add 'wait' label to any root file changes
 wait:
-- '**'
+- changed-files:
+  - any-glob-to-any-file: '**'
