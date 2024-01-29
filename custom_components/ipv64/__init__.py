@@ -1,4 +1,5 @@
 """Integrate IPv64 at https://ipv64.net/."""
+
 from __future__ import annotations
 
 import logging

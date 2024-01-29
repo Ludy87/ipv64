@@ -1,4 +1,5 @@
 """Support for reading status from IPv64.net."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
