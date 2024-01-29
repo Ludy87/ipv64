@@ -1,4 +1,5 @@
 """Config flow for IPv64."""
+
 from __future__ import annotations
 
 import logging
