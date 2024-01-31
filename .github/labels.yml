@@ -4,9 +4,14 @@
 #
 # The repository labels will be automatically configured using this file and
 # the GitHub Action https://github.com/marketplace/actions/github-labeler.
+- name: "Bug"
+  color: "5319e7"
 - name: "Bug: Confirmed!"
   description: Something isn't working
   color: d73a4a
+- name: "Bug: Fix!"
+  description: Fix Bug
+  color: "d73a4a"
 - name: "Bug: False Alarm"
   description: no Bug - False Alarm
   color: 80006C
@@ -37,9 +42,6 @@
 - name: Configuration incorrect
   description: Configuration implemented incorrectly
   color: 8AFF00
-- name: "Bug: Fix!"
-  description: Fix Bug
-  color: d73a4a
 - name: "wait"
   description: in examination
   color: 12CE3B
@@ -49,3 +51,17 @@
 - name: NEWS
   description: Integration News
   color: "016175"
+- name: "Version 1"
+  color: "ff0000"
+- name: "solved"
+  color: "0366d6"
+- name: "stale"
+  color: "ff0000"
+- name: "PR: released"
+  color: "d73a4a"
+- name: "PR: rejected"
+  color: "ff0000"
+- name: "in progress"
+  color: "FDF89E"
+- name: "New Version"
+  color: "ff0000"
