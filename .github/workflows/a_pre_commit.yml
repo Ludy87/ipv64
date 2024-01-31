@@ -19,7 +19,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4.1.1
         with:
-          token: ${{ secrets.PA }}
+          token: ${{ secrets.WT }}
       - name: Set up Python
         uses: actions/setup-python@v5.0.0
         with:
