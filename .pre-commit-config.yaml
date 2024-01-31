@@ -18,6 +18,15 @@ repos:
         args:
           - --fix
           - --line-length=127
+  - repo: https://github.com/PyCQA/autoflake
+    rev: v2.2.1
+    hooks:
+      - id: autoflake
+        args:
+          - "--in-place"
+          - "--remove-duplicate-keys"
+          - "--remove-unused-variables"
+          - "--remove-all-unused-imports"
   - repo: https://github.com/psf/black-pre-commit-mirror
     rev: 24.1.1
     hooks:
@@ -35,11 +44,14 @@ repos:
           - --skip="./.*,*.csv,*.json,*.ambr"
           - --quiet-level=2
         exclude_types: [csv, json]
+        additional_dependencies:
+          - tomli
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v4.5.0
     hooks:
       - id: check-ast
       - id: check-yaml
+      - id: check-toml
       - id: check-json
         exclude: (.vscode|.devcontainer)
       - id: check-added-large-files
@@ -56,6 +68,7 @@ repos:
         exclude_types: [png,yaml,zip]
         exclude: \.(md|yml)$
       - id: trailing-whitespace
+        exclude_types: [json]
       - id: pretty-format-json
         args: [--autofix,--no-ensure-ascii]
         exclude: ^(hacs|custom_components/ipv64/manifest)\.json$
@@ -74,7 +87,7 @@ repos:
           - --keep-updates
         files: ^(custom_components|tests|script)/.+\.py$
         additional_dependencies:
-          - black==23.9.1
+          - black==24.1.1
   - repo: https://github.com/asottile/pyupgrade
     rev: v3.15.0
     hooks:
