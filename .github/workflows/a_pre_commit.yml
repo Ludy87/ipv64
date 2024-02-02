@@ -4,8 +4,6 @@ on:
   pull_request_target:
   push:
     branches: [main]
-    # paths-ignore:
-    #   - ".github/**"
 
 permissions:
   contents: write
