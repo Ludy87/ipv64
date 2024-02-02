@@ -8,7 +8,6 @@ import logging
 
 import aiohttp
 import async_timeout
-
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_DOMAIN,
