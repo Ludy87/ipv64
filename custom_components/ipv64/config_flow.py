@@ -2,10 +2,10 @@
 
 from __future__ import annotations
 
+import asyncio
 import logging
 
 import aiohttp
-import async_timeout
 import voluptuous as vol
 
 from homeassistant import config_entries, core
@@ -60,7 +60,7 @@ async def check_domain_login(hass: core.HomeAssistant, data: dict[str, str]):
 
 async def get_domains(session: aiohttp.ClientSession, headers_api: dict):
     """Fetches domain information from the IPv64.net API."""  # noqa: D401
-    async with async_timeout.timeout(TIMEOUT):
+    async with asyncio.timeout(TIMEOUT):
         try:
             resp = await session.get(GET_DOMAIN_URL, headers=headers_api, raise_for_status=True)
             result = dict(await resp.json())
@@ -81,7 +81,7 @@ async def get_account_info(
     headers_api: dict,
 ) -> dict:
     """Fetches account information from the IPv64.net API and updates the result."""  # noqa: D401
-    async with async_timeout.timeout(TIMEOUT):
+    async with asyncio.timeout(TIMEOUT):
         try:
             resp_account_info = await session.get(GET_ACCOUNT_INFO_URL, headers=headers_api, raise_for_status=True)
             account_result = await resp_account_info.json()
