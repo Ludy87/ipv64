@@ -26,10 +26,10 @@ jobs:
       - name: Install Dependencies
         run: |
           pip install pre-commit==3.6.0 ruff==0.2.0
-          pre-commit install
-      - name: Pre-commit and auto commit
-        run: |
-          pre-commit run --all-files --show-diff-on-failure || true
+          pre-commit install || true
+      # - name: Pre-commit and auto commit
+      #   run: |
+      #     pre-commit run --all-files || true
       - name: Create Pull Request
         uses: peter-evans/create-pull-request@v6.0.0
         with:
