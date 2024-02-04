@@ -2,12 +2,12 @@
 
 from __future__ import annotations
 
+import asyncio
 from datetime import timedelta
 import ipaddress
 import logging
 
 import aiohttp
-import async_timeout
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -48,7 +48,7 @@ async def get_domain(
     """Fetches domain information from the IPv64.net API."""  # noqa: D401
     if not isinstance(data, dict):
         data = dict(data)
-    async with async_timeout.timeout(TIMEOUT):
+    async with asyncio.timeout(TIMEOUT):
         try:
             resp_get_domain = await session.get(GET_DOMAIN_URL, headers=headers, raise_for_status=True)
             result_get_domain = await resp_get_domain.json()
@@ -157,7 +157,7 @@ class IPv64DataUpdateCoordinator(DataUpdateCoordinator):
             ip_is_changed = True
 
         if ip_is_changed:
-            async with async_timeout.timeout(TIMEOUT):
+            async with asyncio.timeout(TIMEOUT):
                 try:
                     resp = await session.get(
                         f"{UPDATE_URL}?domain={self.config_entry.data[CONF_DOMAIN]}",
@@ -191,7 +191,7 @@ class IPv64DataUpdateCoordinator(DataUpdateCoordinator):
         """Check if the ip is equal to the current ip."""
         _LOGGER.debug("Economy-Modus")
         ip_changed = True
-        async with async_timeout.timeout(TIMEOUT):
+        async with asyncio.timeout(TIMEOUT):
             try:
                 request = await session.get(CHECKIP_URL, raise_for_status=True)
                 ip1_obj = ipaddress.ip_address(self.data[CONF_IP_ADDRESS])
