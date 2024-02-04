@@ -29,7 +29,7 @@ jobs:
           pre-commit install
       - name: Pre-commit and auto commit
         run: |
-          pre-commit run --all-files || true
+          pre-commit run --all-files --show-diff-on-failure || true
       - name: Create Pull Request
         uses: peter-evans/create-pull-request@v6.0.0
         with:
