@@ -1,7 +1,7 @@
 name: Request a feature
 description: Request a new IPv64 integration feature
 title: "🏗️ "
-labels: 'feature request'
+labels: "feature request"
 body:
   - type: textarea
     attributes:
