@@ -25,7 +25,7 @@ jobs:
             3.11
       - name: Install Dependencies
         run: |
-          pip install pre-commit==3.6.0
+          pip install pre-commit==3.6.0 ruff==0.2.0
           pre-commit install
       - name: Pre-commit and auto commit
         run: |
