@@ -96,6 +96,7 @@ fixture-parentheses = false
 "async_timeout".msg = "use asyncio.timeout instead"
 
 [tool.ruff.lint.isort]
+profile = "black"
 force-sort-within-sections = true
 combine-as-imports = true
 
