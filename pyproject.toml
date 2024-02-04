@@ -89,8 +89,8 @@ lint.ignore = [
 
 ]
 
-[tool.ruff.format]
-preview = true
+# [tool.ruff.format]
+# preview = true
 
 [tool.ruff.lint.flake8-pytest-style]
 fixture-parentheses = false
