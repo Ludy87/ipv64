@@ -18,6 +18,8 @@ repos:
         args:
           - --fix
           - --line-length=127
+      - id: ruff-format
+        files: ^((custom_components|tests)/.+)?[^/]+\.py$
   - repo: https://github.com/PyCQA/autoflake
     rev: v2.2.1
     hooks:
