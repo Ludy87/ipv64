@@ -6,6 +6,8 @@ import asyncio
 import logging
 
 import aiohttp
+import voluptuous as vol
+
 from homeassistant import config_entries, core
 from homeassistant.const import CONF_DOMAIN, CONF_SCAN_INTERVAL, CONF_TOKEN
 from homeassistant.data_entry_flow import FlowResult
@@ -17,7 +19,6 @@ from homeassistant.helpers.selector import (
     NumberSelectorConfig,
     NumberSelectorMode,
 )
-import voluptuous as vol
 
 from .const import (
     CONF_API_ECONOMY,
