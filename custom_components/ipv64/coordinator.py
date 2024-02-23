@@ -102,8 +102,7 @@ class IPv64DataUpdateCoordinator(DataUpdateCoordinator):
     def __init__(self, hass: HomeAssistant, entry: ConfigEntry) -> None:
         """Initialize IPv64 data updater."""
         _LOGGER.debug("Initialize IPv64 data updater")
-        intervale = entry.options.get(CONF_SCAN_INTERVAL, 23)
-        if intervale == 0:
+        if (intervale := entry.options.get(CONF_SCAN_INTERVAL, 23)) == 0:
             _LOGGER.info("IPv64 data updater disabled")
 
         super().__init__(
