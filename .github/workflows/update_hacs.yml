@@ -1,6 +1,7 @@
 name: Daily Update HACS & Hassio
 
 on:
+  workflow_dispatch:
   schedule:
     - cron: "0 0 * * *"
 
@@ -9,4 +10,4 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4.1.1
-      - uses: Ludy87/action/update_hacs_hassio@v1.0.4
+      - uses: Ludy87/action/update_hacs_hassio@v1.0.5
