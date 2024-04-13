@@ -12,7 +12,7 @@ ci:
 
 repos:
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.2.1
+    rev: v0.3.7
     hooks:
       - id: ruff
         args:
@@ -39,9 +39,10 @@ repos:
       - id: check-json
         exclude: (.vscode|.devcontainer)
   - repo: https://github.com/adrienverge/yamllint.git
-    rev: v1.34.0
+    rev: v1.35.1
     hooks:
       - id: yamllint
+        exclude: .github/FUNDING.yml
   - repo: https://github.com/pre-commit/mirrors-prettier
     rev: v3.1.0
     hooks:

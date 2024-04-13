@@ -80,6 +80,7 @@ class IPv64Sensor(IPv64BaseEntity, SensorEntity):
         """Return the native value of the sensor."""
         if CONF_IP_ADDRESS in self.coordinator.data:
             return self.coordinator.data[CONF_IP_ADDRESS]
+        return None
 
     @property
     def extra_state_attributes(self) -> dict[str, any]:
