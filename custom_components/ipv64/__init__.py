@@ -61,9 +61,8 @@ async def options_update_listener(hass: HomeAssistant, config_entry: config_entr
 async def async_unload_entry(hass: HomeAssistant, entry: config_entries.ConfigEntry) -> bool:
     """Unload a config entry."""
     _LOGGER.debug("Unload a config entry")
-    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
-    if unload_ok:
+    if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
         hass.data[DOMAIN].pop(entry.entry_id)
     if hass.data[DOMAIN]:
         hass.services.async_remove(DOMAIN, SERVICE_REFRESH)
