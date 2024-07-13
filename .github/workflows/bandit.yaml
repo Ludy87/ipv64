@@ -12,7 +12,7 @@ jobs:
   bandit:
     runs-on: "ubuntu-latest"
     steps:
-      - uses: actions/checkout@v4.1.7
+      - uses: actions/checkout@v4
       - name: Bandit Check (Python security linter)
         uses: jpetrucciani/bandit-check@master
         with:
