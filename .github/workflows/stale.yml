@@ -20,7 +20,7 @@ jobs:
       # - PRs
       # - No issues (-1)
       - name: 90 days stale PRs policy
-        uses: actions/stale@v9.0.0
+        uses: actions/stale@v9
         with:
           repo-token: ${{ secrets.GITHUB_TOKEN }}
           days-before-stale: 23
