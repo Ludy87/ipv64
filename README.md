@@ -1,4 +1,4 @@
-# IPv64.net | Free DynDNS2 & Healthcheck Service | Integration for Home-Assistant
+# [IPv64.net](https://ipv64.net/account?p=fK4RZo) | Free DynDNS2 & Healthcheck Service | Integration for Home-Assistant
 
 [![Open your Home Assistant instance and open a repository inside the Home Assistant Community Store.](https://img.shields.io/badge/My-HACS:%20REPOSITORY-000000.svg?&style=for-the-badge&logo=home-assistant&logoColor=white&color=049cdb)](https://my.home-assistant.io/redirect/hacs_repository/?owner=Ludy87&repository=ipv64&category=integration)
 [![hacs_badge](https://img.shields.io/badge/HACS-Default-orange.svg?style=for-the-badge&logo=home-assistant&logoColor=white)](https://github.com/hacs/integration)
@@ -17,15 +17,15 @@
 
 ![IPv64](https://github.com/Ludy87/ipv64/blob/main/images/ipv64_logo.png?raw=true)
 
-## What is IPv64.net?
+## What is [IPv64.net](https://ipv64.net/account?p=fK4RZo)?
 
 IPv64 is of course not a new Internet Protocol (64), but simply a deduplicated short form of IPv6 and IPv4. On the IPv64 site you will find a Dynamic DNS service (DynDNS) and many other useful tools for your daily internet experience.
 
 With the dynamic DNS service of IPv64 you can register and use free subdomains. The update of the domain is done automatically by your own router or alternative hardware / software. Besides updating IP addresses, simple Let's Encrypt DNS challenges are also possible.
 
-Own domains can be added and benefit from all IPv64.net features like DynDNS services, GEO load balancing, DDoS protection, DynDNS2 and SSL encryption.
+Own domains can be added and benefit from all [IPv64.net](https://ipv64.net/account?p=fK4RZo) features like DynDNS services, GEO load balancing, DDoS protection, DynDNS2 and SSL encryption.
 
-[![Register now for free](https://img.shields.io/static/v1.svg?label=&message=Register%20now%20for%20free&style=for-the-badge&color=blue)](https://ipv64.net/account.php)\
+[![Register now for free](https://img.shields.io/static/v1.svg?label=&message=Register%20now%20for%20free&style=for-the-badge&color=blue)](https://ipv64.net/account?p=fK4RZo)\
 [![Discord](https://img.shields.io/static/v1.svg?label=Discord&message=rpicloud&style=for-the-badge&color=black&logo=discord&logoColor=white&labelColor=blue)](https://discord.gg/rpicloud)
 [![Youtube](https://img.shields.io/static/v1.svg?label=Youtube&message=rpicloud&style=for-the-badge&color=black&logo=youtube&logoColor=white&labelColor=red)](https://youtube.com/c/RaspberryPiCloud)
 [![Twitter](https://img.shields.io/static/v1.svg?label=Twitter&message=rpicloud&style=for-the-badge&color=black&logo=twitter&logoColor=white&labelColor=blue)](https://twitter.com/dennis_schroed)
@@ -33,7 +33,7 @@ Own domains can be added and benefit from all IPv64.net features like DynDNS ser
 
 ---
 
-> ## _You need an Account Update Token and an API key to access the IPv64.net API._
+> ## _You need an Account Update Token and an API key to access the [IPv64.net](https://ipv64.net/account?p=fK4RZo) API._
 
 ## Installation
 
@@ -64,7 +64,7 @@ ipv64 should now appear as a card under the HA Integrations page with "Configure
 
 ## API Key Sparing
 
-There is a switch to prevent the API key (default: 64) from being used up. The last IP address and the current IP address are compared (<https://checkip.amazonaws.com/>), if it is negative, the IP update function of IPv64.net is called.
+There is a switch to prevent the API key (default: 64) from being used up. The last IP address and the current IP address are compared (<https://checkip.amazonaws.com/>), if it is negative, the IP update function of [IPv64.net](https://ipv64.net/account?p=fK4RZo) is called.
 
 ---
 
