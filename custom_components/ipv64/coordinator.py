@@ -52,13 +52,14 @@ async def get_domain(
         try:
             resp_get_domain = await session.get(GET_DOMAIN_URL, headers=headers, raise_for_status=True)
             result_get_domain = await resp_get_domain.json()
+            records = result_get_domain["subdomains"][config_entry.data[CONF_DOMAIN]]["records"]
             result_dict = {
                 CONF_DAILY_UPDATE_LIMIT: result_account_info[CONF_DAILY_UPDATE_LIMIT],
                 CONF_DYNDNS_UPDATE_TODAY: result_account_info[CONF_DYNDNS_UPDATES],
                 CONF_WILDCARD: result_get_domain["subdomains"][config_entry.data[CONF_DOMAIN]][CONF_WILDCARD],
                 "total_updates_number": f"{result_get_domain['subdomains'][config_entry.data[CONF_DOMAIN]]['updates']}",
-                CONF_IP_ADDRESS: result_get_domain["subdomains"][config_entry.data[CONF_DOMAIN]]["records"][0]["content"],
-                "last_update": result_get_domain["subdomains"][config_entry.data[CONF_DOMAIN]]["records"][0]["last_update"],
+                CONF_IP_ADDRESS: records[0]["content"] if records else "No records found",
+                "last_update": records[0]["last_update"] if records else "No records found",
             }
             data.update(result_dict)
 
@@ -67,10 +68,11 @@ async def get_domain(
             for subdomain, values in result_get_domain["subdomains"].items():
                 if subdomain == config_entry.data[CONF_DOMAIN]:
                     continue
+                sub_records = values["records"]
                 more_result_dict = {
                     CONF_DOMAIN: subdomain,
-                    CONF_IP_ADDRESS: values["records"][0]["content"],
-                    "last_update": values["records"][0]["last_update"],
+                    CONF_IP_ADDRESS: sub_records[0]["content"] if sub_records else "No records found",
+                    "last_update": sub_records[0]["last_update"] if sub_records else "No records found",
                 }
                 sub_domains_list.append(more_result_dict)
             data["subdomains"] = sub_domains_list
