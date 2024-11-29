@@ -16,7 +16,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN, TRACKER_UPDATE_STR
+from .const import DOMAIN, SHORT_NAME, TRACKER_UPDATE_STR
 from .coordinator import IPv64DataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
@@ -36,7 +36,7 @@ class IPv64BaseEntity(CoordinatorEntity[IPv64DataUpdateCoordinator], RestoreSens
             manufacturer="IPv64.net",
             model="Free DynDNS2 & Healthcheck Service",
             name=f"{DOMAIN} {self.coordinator.data[CONF_DOMAIN]}",
-            via_device=(DOMAIN, f"{self.coordinator.data[CONF_DOMAIN]}"),
+            via_device=(SHORT_NAME, f"{self.coordinator.data[CONF_DOMAIN]}"),
         )
         self._unsub_dispatchers: list[Callable[[], None]] = []
 
@@ -72,8 +72,8 @@ class IPv64Sensor(IPv64BaseEntity, SensorEntity):
         """Initialize the IPv64 sensor."""
         super().__init__(coordinator)
 
-        self._attr_name: str = f"{DOMAIN} {coordinator.data[CONF_DOMAIN]}"
-        self._attr_unique_id = f"{DOMAIN}_{coordinator.data[CONF_DOMAIN]}"
+        self._attr_name: str = f"{DOMAIN}"
+        self._attr_unique_id = f"{DOMAIN}"
 
     @property
     def native_value(self) -> StateType:
@@ -108,8 +108,8 @@ class IPv64SubSensor(IPv64BaseEntity, SensorEntity):
 
         self._subdomain = subdomain
 
-        self._attr_name: str = f"subdomain {subdomain[CONF_DOMAIN]}"
-        self._attr_unique_id = f"subdomain_{subdomain[CONF_DOMAIN]}"
+        self._attr_name: str = f"{subdomain[CONF_DOMAIN]}"
+        self._attr_unique_id = f"{subdomain[CONF_DOMAIN]}"
 
     @property
     def native_value(self) -> StateType:
@@ -120,8 +120,14 @@ class IPv64SubSensor(IPv64BaseEntity, SensorEntity):
     def extra_state_attributes(self) -> dict[str, any]:
         """Return the extra state attributes of the sensor."""
         data = super().extra_state_attributes or {}
-        self._subdomain["update"] = "Update for this domain is not triggered"
-        return dict(data, **self._subdomain)
+        data = super().extra_state_attributes or {}
+        if self.coordinator.data:
+            if "subdomains" in self.coordinator.data:
+                del self.coordinator.data["subdomains"]
+            return dict(data, **self._subdomain)
+        return dict(data, **{})
+        # self._subdomain["update"] = "Update for this domain is not triggered"
+        # return dict(data, **self._subdomain)
 
 
 async def async_setup_entry(
@@ -136,6 +142,7 @@ async def async_setup_entry(
     if coordinator.data[CONF_DOMAIN]:
         entities.append(IPv64Sensor(coordinator))
     if "subdomains" in coordinator.data and coordinator.data["subdomains"]:
+        _LOGGER.info(coordinator.data)
         for subdomain in coordinator.data["subdomains"]:
             entities.append(IPv64SubSensor(subdomain, coordinator))
     async_add_entities(entities)

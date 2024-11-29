@@ -27,6 +27,8 @@ CONF_WILDCARD: Final = "wildcard"
 
 DOMAIN: Final = "ipv64"
 
+SHORT_NAME: Final = "IPv64"
+
 DEFAULT_INTERVAL: Final = 23
 
 DATA_SCHEMA = {

@@ -15,6 +15,8 @@ from homeassistant.const import (
     CONF_IP_ADDRESS,
     CONF_SCAN_INTERVAL,
     CONF_TOKEN,
+    CONF_TTL,
+    CONF_TYPE,
 )
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -52,27 +54,39 @@ async def get_domain(
         try:
             resp_get_domain = await session.get(GET_DOMAIN_URL, headers=headers, raise_for_status=True)
             result_get_domain = await resp_get_domain.json()
+            _LOGGER.debug(result_get_domain)
+            _LOGGER.debug(config_entry.data)
+            subdomains: dict = result_get_domain["subdomains"]
+            if not subdomains:
+                return data
+            # result: dict = subdomains[config_entry.data[CONF_DOMAIN]]
+            # if not result:
+            #     return data
+            _LOGGER.debug(result_account_info)
+            result_dict = {}
             result_dict = {
                 CONF_DAILY_UPDATE_LIMIT: result_account_info[CONF_DAILY_UPDATE_LIMIT],
                 CONF_DYNDNS_UPDATE_TODAY: result_account_info[CONF_DYNDNS_UPDATES],
-                CONF_WILDCARD: result_get_domain["subdomains"][config_entry.data[CONF_DOMAIN]][CONF_WILDCARD],
-                "total_updates_number": f"{result_get_domain['subdomains'][config_entry.data[CONF_DOMAIN]]['updates']}",
-                CONF_IP_ADDRESS: result_get_domain["subdomains"][config_entry.data[CONF_DOMAIN]]["records"][0]["content"],
-                "last_update": result_get_domain["subdomains"][config_entry.data[CONF_DOMAIN]]["records"][0]["last_update"],
             }
             data.update(result_dict)
 
             sub_domains_list = []
 
-            for subdomain, values in result_get_domain["subdomains"].items():
-                if subdomain == config_entry.data[CONF_DOMAIN]:
+            for subdomain, values in subdomains.items():
+                records: list = values["records"]
+                if len(records) < 1:
                     continue
-                more_result_dict = {
-                    CONF_DOMAIN: subdomain,
-                    CONF_IP_ADDRESS: values["records"][0]["content"],
-                    "last_update": values["records"][0]["last_update"],
-                }
-                sub_domains_list.append(more_result_dict)
+
+                for record in records:
+                    more_result_dict = {
+                        CONF_DOMAIN: subdomain if not record["praefix"] else f'{record["praefix"]}.{subdomain}',
+                        CONF_IP_ADDRESS: record["content"],
+                        CONF_TYPE: record[CONF_TYPE],
+                        CONF_TTL: record[CONF_TTL],
+                        "deactivated": record["deactivated"],
+                        "last_update": record["last_update"],
+                    }
+                    sub_domains_list.append(more_result_dict)
             data["subdomains"] = sub_domains_list
         except aiohttp.ClientResponseError as error:
             errors = {
