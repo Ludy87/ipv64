@@ -51,8 +51,24 @@ TRACKER_UPDATE_STR: Final = f"{DOMAIN}_tracker_update"
 
 TIMEOUT: Final = 10
 UPDATE_URL: Final = "https://ipv64.net/nic/update"
-GET_DOMAIN_URL: Final = "https://ipv64.net/api.php?get_domains"
-GET_ACCOUNT_INFO_URL: Final = "https://ipv64.net/api.php?get_account_info"
+API_URL: Final = "https://ipv64.net/api.php"  # "http://192.168.0.220:1080/api.php"
 CHECKIP_URL: Final = "https://checkip.amazonaws.com/"
 
+GET_DOMAIN_URL: Final = f"{API_URL}?get_domains"
+GET_ACCOUNT_INFO_URL: Final = f"{API_URL}?get_account_info"
+GET_HEALTHCHECKS: Final = f"{API_URL}?get_healthchecks"
+GET_HEALTHCHECK_STATISTICS: Final = f"{API_URL}?get_healthcheck_statistics"
+GET_INTEGRATIONS: Final = f"{API_URL}?get_integrations"
+
 SERVICE_REFRESH = "refresh"
+
+EXCLUDED_KEYS: Final = [
+    "email",
+    "account_class",
+    "get_account_info",
+    "dyndns_updates",
+    "update_hash",
+    "api_key",
+    "sms_count",
+    "api_updates",
+]

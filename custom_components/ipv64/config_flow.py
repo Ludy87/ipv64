@@ -27,6 +27,7 @@ from .const import (
     CONF_DYNDNS_UPDATES,
     DATA_SCHEMA,
     DOMAIN,
+    EXCLUDED_KEYS,
     GET_ACCOUNT_INFO_URL,
     GET_DOMAIN_URL,
     TIMEOUT,
@@ -51,10 +52,9 @@ async def check_domain_login(hass: core.HomeAssistant, data: dict[str, str]):
 
     headers_api = {"Authorization": f"Bearer {data[CONF_API_KEY]}"}
 
+    result.update(await get_account_info(session, headers_api, data, result))
     result.update(await get_domains(session, headers_api))
-    result.update(await get_account_info(data, result, session, headers_api))
-
-    _LOGGER.debug(result)
+    _LOGGER.debug("check_domain_login")
     return result
 
 
@@ -66,7 +66,7 @@ async def get_domains(session: aiohttp.ClientSession, headers_api: dict):
             result = dict(await resp.json())
         except aiohttp.ClientResponseError as error:
             _LOGGER.error(
-                "Your 'API Key' is incorrect. Error: %s | Status: %i",
+                "get_domains: Your 'API Key' is incorrect. Error: %s | Status: %i",
                 error.message,
                 error.status,
             )
@@ -75,27 +75,42 @@ async def get_domains(session: aiohttp.ClientSession, headers_api: dict):
 
 
 async def get_account_info(
-    data: dict[str, str],
-    result: dict,
     session: aiohttp.ClientSession,
     headers_api: dict,
+    data: dict[str, str],
+    result: dict = None,
 ) -> dict:
     """Fetches account information from the IPv64.net API and updates the result."""  # noqa: D401
+    if result is None:
+        result = {}
     async with asyncio.timeout(TIMEOUT):
         try:
             resp_account_info = await session.get(GET_ACCOUNT_INFO_URL, headers=headers_api, raise_for_status=True)
-            account_result = await resp_account_info.json()
-            if account_result["update_hash"] != data[CONF_TOKEN]:
+            account_result: dict = await resp_account_info.json()
+            _LOGGER.debug("get_account_info: %s account_result: %s", resp_account_info.url, account_result)
+            if account_result.get("update_hash") != data[CONF_TOKEN]:
                 raise APIKeyError()
             result.update(
                 {
                     CONF_DAILY_UPDATE_LIMIT: account_result["account_class"]["dyndns_update_limit"],
                     CONF_DYNDNS_UPDATES: account_result[CONF_DYNDNS_UPDATES],
+                    "dyndns_domain_limit": account_result["account_class"]["dyndns_domain_limit"],
+                    "api_limit": account_result["account_class"]["api_limit"],
+                    "sms_limit": account_result["account_class"]["sms_limit"],
+                    "owndomain_limit": account_result["account_class"]["owndomain_limit"],
+                    "healthcheck_update_limit": account_result["account_class"]["healthcheck_update_limit"],
+                    "healthcheck_limit": account_result["account_class"]["healthcheck_limit"],
+                    "sms_count": account_result["sms_count"],
+                    "api_updates": account_result["api_updates"],
+                    "account": account_result["account_class"]["class_name"],
                 }
             )
+            for k, v in account_result.items():
+                if k not in EXCLUDED_KEYS:
+                    result.setdefault(k, v)
         except aiohttp.ClientResponseError as error:
             _LOGGER.error(
-                "Your 'API Key' is incorrect. Error: %s | Status: %i",
+                "get_account_info: Your 'API Key' is incorrect. Error: %s | Status: %i",
                 error.message,
                 error.status,
             )
