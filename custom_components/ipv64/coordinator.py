@@ -29,7 +29,6 @@ from .const import (
     CONF_API_KEY,
     CONF_DAILY_UPDATE_LIMIT,
     CONF_DYNDNS_UPDATES,
-    CONF_WILDCARD,
     DOMAIN,
     GET_DOMAIN_URL,
     TIMEOUT,
@@ -73,12 +72,6 @@ async def get_domain(session: aiohttp.ClientSession, headers: dict, data):
         except aiohttp.ClientResponseError as error:
             errors = {
                 "Account Update Token": "incorrect",
-                CONF_DAILY_UPDATE_LIMIT: "unlivable",
-                CONF_DYNDNS_UPDATES: "unlivable",
-                CONF_WILDCARD: data[CONF_WILDCARD] if data and CONF_WILDCARD in data else "unlivable",
-                "total_updates_number": (
-                    f"{data['total_updates_number']}" if data and "total_updates_number" in data else "unlivable"
-                ),
                 CONF_IP_ADDRESS: data[CONF_IP_ADDRESS] if data and CONF_IP_ADDRESS in data else "unlivable",
                 "last_update": data["last_update"] if data and "last_update" in data else "unlivable",
             }
