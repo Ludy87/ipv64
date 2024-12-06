@@ -56,7 +56,6 @@ async def get_domain(session: aiohttp.ClientSession, headers: dict, data):
                 records: list = values["records"]
                 if len(records) < 1 or subdomain != data[CONF_DOMAIN]:
                     continue
-
                 for record in records:
                     more_result_dict = {
                         CONF_DOMAIN: subdomain if not record["praefix"] else f'{record["praefix"]}.{subdomain}',
