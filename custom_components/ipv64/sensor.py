@@ -223,7 +223,6 @@ async def async_setup_entry(
         entities.append(IPv64SettingSesnor(coordinator, "Dyndns counter today", CONF_DYNDNS_UPDATES, "daily_update_limit"))
     if "subdomains" in coordinator.data and coordinator.data["subdomains"]:
         for subdomain in coordinator.data["subdomains"]:
-            _LOGGER.warning(subdomain)
             if coordinator.data[CONF_DOMAIN] == subdomain[CONF_DOMAIN]:
                 entities.append(IPv64DomainSensor(coordinator, subdomain))
                 entities.append(IPv64DomainUpdateSensor(coordinator, subdomain))

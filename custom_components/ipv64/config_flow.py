@@ -54,7 +54,6 @@ async def check_domain_login(hass: core.HomeAssistant, data: dict[str, str]):
 
     result.update(await get_account_info(session, headers_api, data, result))
     result.update(await get_domains(session, headers_api))
-    _LOGGER.debug("check_domain_login")
     return result
 
 
@@ -87,7 +86,6 @@ async def get_account_info(
         try:
             resp_account_info = await session.get(GET_ACCOUNT_INFO_URL, headers=headers_api, raise_for_status=True)
             account_result: dict = await resp_account_info.json()
-            _LOGGER.debug("get_account_info: %s account_result: %s", resp_account_info.url, account_result)
             if account_result.get("update_hash") != data[CONF_TOKEN]:
                 raise APIKeyError()
             result.update(
