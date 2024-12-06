@@ -125,7 +125,6 @@ class IPv64SettingSesnor(IPv64BaseEntity, SensorEntity):
         data = super().extra_state_attributes or {}
         if self._attr_key and self.coordinator.data[self._attr_key]:
             data = {self._attr_key: self.coordinator.data[self._attr_key]}
-            return dict(data, **{})
         return dict(data, **{})
 
 
@@ -187,7 +186,6 @@ class IPv64DomainUpdateSensor(IPv64BaseEntity, SensorEntity):
     @property
     def extra_state_attributes(self) -> dict[str, any]:
         """Return the extra state attributes of the sensor."""
-        data = super().extra_state_attributes or {}
         data = {CONF_IP_ADDRESS: self._subdomain[CONF_IP_ADDRESS]}
         return dict(data, **{})
 
