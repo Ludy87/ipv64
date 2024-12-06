@@ -15,6 +15,8 @@ from homeassistant.const import (
     CONF_IP_ADDRESS,
     CONF_SCAN_INTERVAL,
     CONF_TOKEN,
+    CONF_TTL,
+    CONF_TYPE,
 )
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -26,9 +28,7 @@ from .const import (
     CONF_API_ECONOMY,
     CONF_API_KEY,
     CONF_DAILY_UPDATE_LIMIT,
-    CONF_DYNDNS_UPDATE_TODAY,
     CONF_DYNDNS_UPDATES,
-    CONF_WILDCARD,
     DOMAIN,
     GET_DOMAIN_URL,
     TIMEOUT,
@@ -38,13 +38,7 @@ from .const import (
 _LOGGER = logging.getLogger(__name__)
 
 
-async def get_domain(
-    session: aiohttp.ClientSession,
-    headers: dict,
-    result_account_info,
-    data,
-    config_entry,
-) -> dict:
+async def get_domain(session: aiohttp.ClientSession, headers: dict, data):
     """Fetches domain information from the IPv64.net API."""  # noqa: D401
     if not isinstance(data, dict):
         data = dict(data)
@@ -52,39 +46,31 @@ async def get_domain(
         try:
             resp_get_domain = await session.get(GET_DOMAIN_URL, headers=headers, raise_for_status=True)
             result_get_domain = await resp_get_domain.json()
-            records = result_get_domain["subdomains"][config_entry.data[CONF_DOMAIN]]["records"]
-            result_dict = {
-                CONF_DAILY_UPDATE_LIMIT: result_account_info[CONF_DAILY_UPDATE_LIMIT],
-                CONF_DYNDNS_UPDATE_TODAY: result_account_info[CONF_DYNDNS_UPDATES],
-                CONF_WILDCARD: result_get_domain["subdomains"][config_entry.data[CONF_DOMAIN]][CONF_WILDCARD],
-                "total_updates_number": f"{result_get_domain['subdomains'][config_entry.data[CONF_DOMAIN]]['updates']}",
-                CONF_IP_ADDRESS: records[0]["content"] if records else "No records found",
-                "last_update": records[0]["last_update"] if records else "No records found",
-            }
-            data.update(result_dict)
+            subdomains: dict = result_get_domain["subdomains"]
+            if not subdomains:
+                return
 
             sub_domains_list = []
 
-            for subdomain, values in result_get_domain["subdomains"].items():
-                if subdomain == config_entry.data[CONF_DOMAIN]:
+            for subdomain, values in subdomains.items():
+                records: list = values["records"]
+                if len(records) < 1 or subdomain != data[CONF_DOMAIN]:
                     continue
-                sub_records = values["records"]
-                more_result_dict = {
-                    CONF_DOMAIN: subdomain,
-                    CONF_IP_ADDRESS: sub_records[0]["content"] if sub_records else "No records found",
-                    "last_update": sub_records[0]["last_update"] if sub_records else "No records found",
-                }
-                sub_domains_list.append(more_result_dict)
+                for record in records:
+                    more_result_dict = {
+                        CONF_DOMAIN: subdomain if not record["praefix"] else f'{record["praefix"]}.{subdomain}',
+                        CONF_IP_ADDRESS: record["content"],
+                        CONF_TYPE: record[CONF_TYPE],
+                        CONF_TTL: record[CONF_TTL],
+                        "failover_policy": record["failover_policy"],
+                        "deactivated": record["deactivated"],
+                        "last_update": record["last_update"],
+                    }
+                    sub_domains_list.append(more_result_dict)
             data["subdomains"] = sub_domains_list
         except aiohttp.ClientResponseError as error:
             errors = {
                 "Account Update Token": "incorrect",
-                CONF_DAILY_UPDATE_LIMIT: "unlivable",
-                CONF_DYNDNS_UPDATE_TODAY: "unlivable",
-                CONF_WILDCARD: data[CONF_WILDCARD] if data and CONF_WILDCARD in data else "unlivable",
-                "total_updates_number": (
-                    f"{data['total_updates_number']}" if data and "total_updates_number" in data else "unlivable"
-                ),
                 CONF_IP_ADDRESS: data[CONF_IP_ADDRESS] if data and CONF_IP_ADDRESS in data else "unlivable",
                 "last_update": data["last_update"] if data and "last_update" in data else "unlivable",
             }
@@ -94,8 +80,6 @@ async def get_domain(
                 error.message,
                 error.status,
             )
-
-    return data
 
 
 class IPv64DataUpdateCoordinator(DataUpdateCoordinator):
@@ -133,15 +117,15 @@ class IPv64DataUpdateCoordinator(DataUpdateCoordinator):
 
         session: aiohttp.ClientSession = async_get_clientsession(self.hass)
         headers_api = {"Authorization": f"Bearer {self.config_entry.data[CONF_API_KEY]}"}
-        headers_token = {"Authorization": f"Bearer {self.config_entry.data[CONF_TOKEN]}"}
 
         try:
-            result_account_info = await get_account_info(self.config_entry.data, {}, session, headers_api=headers_api)
+            result_account_info = await get_account_info(session, headers_api, self.config_entry.data)
+            self.data.update(result_account_info)
         except APIKeyError:
             result_account_info[CONF_DYNDNS_UPDATES] = "unlivable"
             result_account_info[CONF_DAILY_UPDATE_LIMIT] = "unlivable"
 
-        self.data: dict = await get_domain(session, headers_api, result_account_info, self.data, self.config_entry)
+        await get_domain(session, headers_api, self.data)
 
         ip_is_changed = False
 
@@ -149,15 +133,13 @@ class IPv64DataUpdateCoordinator(DataUpdateCoordinator):
             hasattr(self.config_entry, "options")
             and CONF_API_ECONOMY in self.config_entry.options
             and self.config_entry.options[CONF_API_ECONOMY]
-        ):
-            ip_is_changed = await self.check_ip_equal(session)
-
-        if is_economy:
+        ) or is_economy:
             ip_is_changed = await self.check_ip_equal(session)
         else:
             ip_is_changed = True
 
         if ip_is_changed:
+            headers_token = {"Authorization": f"Bearer {self.config_entry.data[CONF_TOKEN]}"}
             async with asyncio.timeout(TIMEOUT):
                 try:
                     resp = await session.get(
@@ -186,6 +168,7 @@ class IPv64DataUpdateCoordinator(DataUpdateCoordinator):
                             error.message,
                             error.status,
                         )
+                    self.data.update({"update_result": "fail"})
         return self.data
 
     async def check_ip_equal(self, session) -> bool:
