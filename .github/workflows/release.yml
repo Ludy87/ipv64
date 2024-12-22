@@ -46,10 +46,15 @@ jobs:
           zip -r ipv64.zip ./
       - name: Upload zip to release
         if: steps.checkTag.outputs.exists == 'false'
-        uses: svenstaro/upload-release-action@04733e069f2d7f7f0b4aebc4fbdbce8613b03ccd # 2.9.0
+        uses: softprops/action-gh-release@7b4da11513bf3f43f9999e90eabced41ab8bb048 # v2.2.0
         with:
-          repo_token: ${{ secrets.GITHUB_TOKEN }}
-          file: ${{ github.workspace }}/custom_components/ipv64/ipv64.zip
-          asset_name: ipv64.zip
-          tag: ${{ steps.version.outputs.version }}
-          overwrite: true
+          files: ${{ github.workspace }}/custom_components/ipv64/ipv64.zip
+          token: ${{ secrets.GITHUB_TOKEN }}
+          tag_name: ${{ steps.version.outputs.version }}
+        # uses: svenstaro/upload-release-action@04733e069f2d7f7f0b4aebc4fbdbce8613b03ccd # 2.9.0
+        # with:
+        #   repo_token: ${{ secrets.GITHUB_TOKEN }}
+        #   file: ${{ github.workspace }}/custom_components/ipv64/ipv64.zip
+        #   asset_name: ipv64.zip
+        #   tag: ${{ steps.version.outputs.version }}
+        #   overwrite: true
