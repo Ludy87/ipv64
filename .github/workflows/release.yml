@@ -23,7 +23,7 @@ jobs:
         uses: actions/setup-python@0b93645e9fea7318ecaed2b359559ac225c90a2b # v5.3.0
         with:
           python-version: |
-            3.11
+            3.12
           check-latest: true
           allow-prereleases: true
       - name: Get Version
@@ -51,6 +51,7 @@ jobs:
           files: ${{ github.workspace }}/custom_components/ipv64/ipv64.zip
           token: ${{ secrets.GITHUB_TOKEN }}
           tag_name: ${{ steps.version.outputs.version }}
+          prerelease: true
         # uses: svenstaro/upload-release-action@04733e069f2d7f7f0b4aebc4fbdbce8613b03ccd # 2.9.0
         # with:
         #   repo_token: ${{ secrets.GITHUB_TOKEN }}
