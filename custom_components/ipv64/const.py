@@ -4,8 +4,6 @@ from __future__ import annotations
 
 from typing import Final
 
-import voluptuous as vol
-
 from homeassistant.const import CONF_DOMAIN, CONF_SCAN_INTERVAL, CONF_TOKEN
 from homeassistant.helpers.selector import (
     BooleanSelector,
@@ -17,6 +15,7 @@ from homeassistant.helpers.selector import (
     TextSelectorConfig,
     TextSelectorType,
 )
+import voluptuous as vol
 
 CONF_API_KEY: Final = "apikey"
 CONF_API_ECONOMY: Final = "api_key_economy"
