@@ -39,11 +39,22 @@ jobs:
           tag: ${{ steps.version.outputs.version }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      - name: ZIP Component Dir
+      # - name: ZIP Component Dir
+      #   if: steps.checkTag.outputs.exists == 'false'
+      #   run: |
+      #     cd ${{ github.workspace }}/custom_components/ipv64
+      #     zip -r ipv64.zip ./
+
+      - name: Upload Assets jar binaries
         if: steps.checkTag.outputs.exists == 'false'
-        run: |
-          cd ${{ github.workspace }}/custom_components/ipv64
-          zip -r ipv64.zip ./
+        uses: actions/upload-artifact@6f51ac03b9356f520e9adb1b1b7802705f340c2b # v4.5.0
+        with:
+          path: ${{ github.workspace }}/custom_components/ipv64/ipv64.zip
+          name: ipv64.zip
+          overwrite: true
+          retention-days: 1
+          if-no-files-found: error
+
       - name: Upload zip to release
         if: steps.checkTag.outputs.exists == 'false'
         uses: softprops/action-gh-release@7b4da11513bf3f43f9999e90eabced41ab8bb048 # v2.2.0
