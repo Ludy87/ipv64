@@ -60,7 +60,7 @@ select = [
     "T20",  # flake8-print
     "TRY004", # Prefer TypeError exception for invalid type
     "B904", # "TRY200", # Use raise from to specify exception cause
-    "TRY302", # Remove exception handler; error is immediately re-raised
+    "TRY203", # Remove exception handler; error is immediately re-raised
     "UP",  # pyupgrade
     "W",  # pycodestyle
 ]
@@ -87,7 +87,6 @@ ignore = [
     "UP007", # keep type annotation style as is
     # Ignored due to performance: https://github.com/charliermarsh/ruff/issues/2923
     "UP038", # Use `X | Y` in `isinstance` call instead of `(X, Y)`
-
 ]
 
 [tool.ruff.lint.flake8-pytest-style]
