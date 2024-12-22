@@ -12,7 +12,7 @@ ci:
 
 repos:
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.8.1
+    rev: v0.8.4
     hooks:
       - id: ruff
         args:
@@ -56,15 +56,15 @@ repos:
       - id: python-typing-update
         stages: [manual]
         args:
-          - --py311-plus
+          - --py312-plus
           - --force
           - --keep-updates
         files: ^(custom_components|tests|script)/.+\.py$
   - repo: https://github.com/gitleaks/gitleaks
-    rev: v8.16.3
+    rev: v8.22.0
     hooks:
       - id: gitleaks
-  - repo: https://github.com/pylint-dev/pylint
-    rev: v2.17.2
-    hooks:
-      - id: pylint
+  # - repo: https://github.com/pylint-dev/pylint
+  #   rev: v3.3.2
+  #   hooks:
+  #     - id: pylint
