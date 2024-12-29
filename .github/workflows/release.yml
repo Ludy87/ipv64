@@ -65,11 +65,10 @@ jobs:
         uses: actions/attest-build-provenance@v2
         with:
           subject-path: ${{ github.workspace }}/custom_components/ipv64/ipv64.zip
-      - name: Copy Attestation
+      - name: Copy attestation
         if: steps.checkTag.outputs.exists == 'false'
-        run: cp "$ATTESTATION" ${{ github.workspace }}/custom_components/ipv64/ipv64.zip.sigstore
-        env:
-          ATTESTATION: "${{ steps.attestation.outputs.bundle-path }}"
+        run: |
+          cp "${{ steps.attestation.outputs.bundle-path }}" ${{ github.workspace }}/custom_components/ipv64/ipv64.zip.sigstore
 
       - name: Import GPG key
         if: steps.checkTag.outputs.exists == 'false'
