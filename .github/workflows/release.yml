@@ -74,7 +74,7 @@ jobs:
       - name: Copy attestation
         if: steps.checkTag.outputs.exists == 'false'
         run: |
-          cp "${{ steps.attestation.outputs.bundle-path }}" ${{ github.workspace }}/custom_components/ipv64/ipv64.zip.sigstore
+          cp "${{ steps.attestation.outputs.bundle-path }}" ${{ github.workspace }}/custom_components/ipv64/ipv64.zip.intoto.jsonl
 
       - name: Import GPG key
         if: steps.checkTag.outputs.exists == 'false'
@@ -135,8 +135,8 @@ jobs:
         uses: svenstaro/upload-release-action@04733e069f2d7f7f0b4aebc4fbdbce8613b03ccd # v2
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
-          file: ${{ github.workspace }}/custom_components/ipv64/ipv64.zip.sigstore
-          asset_name: ipv64.zip.sigstore
+          file: ${{ github.workspace }}/custom_components/ipv64/ipv64.zip.intoto.jsonl
+          asset_name: ipv64.zip.intoto.jsonl
           tag: ${{ steps.version.outputs.version }}
           overwrite: true
 
