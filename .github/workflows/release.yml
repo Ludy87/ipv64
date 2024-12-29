@@ -86,14 +86,14 @@ jobs:
         env:
           PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
         run: |
-          gpg --detach-sign --batch --yes --pinentry-mode loopback --passphrase "$PASSPHRASE" -a ${{ github.workspace }}/custom_components/ipv64.zip
+          gpg --detach-sign --batch --yes --pinentry-mode loopback --passphrase "$PASSPHRASE" -a ${{ github.workspace }}/custom_components/ipv64/ipv64.zip
 
       - name: Upload zip to release
         if: steps.checkTag.outputs.exists == 'false'
         uses: svenstaro/upload-release-action@04733e069f2d7f7f0b4aebc4fbdbce8613b03ccd # v2
         with:
           repo_token: ${{ secrets.TOKEN }}
-          file: ${{ github.workspace }}/custom_components/ipv64.zip
+          file: ${{ github.workspace }}/custom_components/ipv64/ipv64.zip
           asset_name: ipv64.zip
           tag: ${{ steps.version.outputs.version }}
           overwrite: true
@@ -103,7 +103,7 @@ jobs:
         uses: svenstaro/upload-release-action@04733e069f2d7f7f0b4aebc4fbdbce8613b03ccd # v2
         with:
           repo_token: ${{ secrets.TOKEN }}
-          file: ${{ github.workspace }}/custom_components/ipv64.zip.asc
+          file: ${{ github.workspace }}/custom_components/ipv64/ipv64.zip.asc
           asset_name: ipv64.zip.asc
           tag: ${{ steps.version.outputs.version }}
           overwrite: true
