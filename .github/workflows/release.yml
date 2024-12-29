@@ -92,7 +92,7 @@ jobs:
         if: steps.checkTag.outputs.exists == 'false'
         uses: svenstaro/upload-release-action@04733e069f2d7f7f0b4aebc4fbdbce8613b03ccd # v2
         with:
-          repo_token: ${{ secrets.TOKEN }}
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
           file: ${{ github.workspace }}/custom_components/ipv64/ipv64.zip
           asset_name: ipv64.zip
           tag: ${{ steps.version.outputs.version }}
@@ -102,7 +102,7 @@ jobs:
         if: steps.checkTag.outputs.exists == 'false'
         uses: svenstaro/upload-release-action@04733e069f2d7f7f0b4aebc4fbdbce8613b03ccd # v2
         with:
-          repo_token: ${{ secrets.TOKEN }}
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
           file: ${{ github.workspace }}/custom_components/ipv64/ipv64.zip.asc
           asset_name: ipv64.zip.asc
           tag: ${{ steps.version.outputs.version }}
