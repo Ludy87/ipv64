@@ -58,11 +58,19 @@ jobs:
         run: |
           cd ${{ github.workspace }}/custom_components/ipv64
           zip -r ipv64.zip ./
+
       - name: Generate artifact attestation
         if: steps.checkTag.outputs.exists == 'false'
+        id: attestation
         uses: actions/attest-build-provenance@v2
         with:
           subject-path: ${{ github.workspace }}/custom_components/ipv64/ipv64.zip
+      - name: Copy Attestation
+        if: steps.checkTag.outputs.exists == 'false'
+        run: cp "$ATTESTATION" ${{ github.workspace }}/custom_components/ipv64/ipv64.zip.sigstore
+        env:
+          ATTESTATION: "${{ steps.attestation.outputs.bundle-path }}"
+
       - name: Import GPG key
         if: steps.checkTag.outputs.exists == 'false'
         env:
@@ -113,6 +121,16 @@ jobs:
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
           file: ${{ github.workspace }}/custom_components/ipv64/ipv64.zip.asc
+          asset_name: ipv64.zip.asc
+          tag: ${{ steps.version.outputs.version }}
+          overwrite: true
+
+      - name: Upload zip to release
+        if: steps.checkTag.outputs.exists == 'false'
+        uses: svenstaro/upload-release-action@04733e069f2d7f7f0b4aebc4fbdbce8613b03ccd # v2
+        with:
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          file: ${{ github.workspace }}/custom_components/ipv64/ipv64.zip.sigstore
           asset_name: ipv64.zip.asc
           tag: ${{ steps.version.outputs.version }}
           overwrite: true
