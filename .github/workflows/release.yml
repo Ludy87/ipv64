@@ -115,28 +115,10 @@ jobs:
         uses: svenstaro/upload-release-action@04733e069f2d7f7f0b4aebc4fbdbce8613b03ccd # v2
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
-          file: ${{ github.workspace }}/custom_components/ipv64/ipv64.zip
-          asset_name: ipv64.zip
-          tag: ${{ steps.version.outputs.version }}
-          overwrite: true
-
-      - name: Upload zip to release
-        if: steps.checkTag.outputs.exists == 'false'
-        uses: svenstaro/upload-release-action@04733e069f2d7f7f0b4aebc4fbdbce8613b03ccd # v2
-        with:
-          repo_token: ${{ secrets.GITHUB_TOKEN }}
-          file: ${{ github.workspace }}/custom_components/ipv64/ipv64.zip.asc
-          asset_name: ipv64.zip.asc
-          tag: ${{ steps.version.outputs.version }}
-          overwrite: true
-
-      - name: Upload zip to release
-        if: steps.checkTag.outputs.exists == 'false'
-        uses: svenstaro/upload-release-action@04733e069f2d7f7f0b4aebc4fbdbce8613b03ccd # v2
-        with:
-          repo_token: ${{ secrets.GITHUB_TOKEN }}
-          file: ${{ github.workspace }}/custom_components/ipv64/ipv64.zip.intoto.jsonl
-          asset_name: ipv64.zip.intoto.jsonl
+          file: |
+            ${{ github.workspace }}/custom_components/ipv64/ipv64.zip
+            ${{ github.workspace }}/custom_components/ipv64/ipv64.zip.asc
+            ${{ github.workspace }}/custom_components/ipv64/ipv64.zip.intoto.jsonl
           tag: ${{ steps.version.outputs.version }}
           overwrite: true
 
@@ -150,12 +132,3 @@ jobs:
           prerelease: false
           token: ${{ secrets.GITHUB_TOKEN }}
           generate_release_notes: true
-
-      # - name: Upload zip to release
-      #   if: steps.checkTag.outputs.exists == 'false'
-      #   uses: softprops/action-gh-release@01570a1f39cb168c169c802c3bceb9e93fb10974 # v2.1.0
-      #   with:
-      #     files: ${{ github.workspace }}/custom_components/ipv64/ipv64.zip
-      #     token: ${{ secrets.GITHUB_TOKEN }}
-      #     tag_name: ${{ steps.version.outputs.version }}
-      #     generate_release_notes: true
