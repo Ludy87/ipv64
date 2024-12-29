@@ -86,7 +86,9 @@ jobs:
         env:
           PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
         run: |
-          gpg --detach-sign --batch --yes --pinentry-mode loopback --passphrase "$PASSPHRASE" -a ${{ github.workspace }}/custom_components/ipv64/ipv64.zip
+          gpg --detach-sign --batch --yes --pinentry-mode loopback --passphrase "$PASSPHRASE" \
+            -o ${{ github.workspace }}/custom_components/ipv64/ipv64.zip.asc \
+               ${{ github.workspace }}/custom_components/ipv64/ipv64.zip
 
       - name: Upload zip to release
         if: steps.checkTag.outputs.exists == 'false'
