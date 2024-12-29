@@ -90,12 +90,18 @@ jobs:
             -a ${{ github.workspace }}/custom_components/ipv64/ipv64.zip \
             -o ${{ github.workspace }}/custom_components/ipv64/ipv64.zip.asc
 
-      - name: Generate Provenance
+      - name: Install In-Toto
         if: steps.checkTag.outputs.exists == 'false'
-        uses: slsa-framework/slsa-github-generator@v1
-        with:
-          artifact_path: ${{ github.workspace }}/custom_components/ipv64/ipv64.zip
-          version: ${{ steps.version.outputs.version }}
+        run: |
+          pip install in-toto
+
+      - name: Generate Provenance with In-Toto
+        if: steps.checkTag.outputs.exists == 'false'
+        env:
+          GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
+        run: |
+          in-toto-run --step-name "build" --materials . --products ${{ github.workspace }}/custom_components/ipv64/ipv64.zip \
+            --key ${{ secrets.GPG_PRIVATE_KEY }} --sign > ${{ github.workspace }}/custom_components/ipv64/ipv64.zip.provenanc
 
       - name: Upload zip to release
         if: steps.checkTag.outputs.exists == 'false'
@@ -105,7 +111,7 @@ jobs:
           file: |
             ${{ github.workspace }}/custom_components/ipv64/ipv64.zip
             ${{ github.workspace }}/custom_components/ipv64/ipv64.zip.asc
-            ${{ github.workspace }}/custom_components/ipv64/ipv64.zip.intoto
+            ${{ github.workspace }}/custom_components/ipv64/ipv64.zip.provenanc
           tag: ${{ steps.version.outputs.version }}
           overwrite: true
 
