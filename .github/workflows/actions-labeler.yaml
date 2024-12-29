@@ -12,6 +12,7 @@ jobs:
     if: ${{ github.event.pull_request.user.login != 'dependabot[bot]' }}
     runs-on: ubuntu-latest
     permissions:
+      contents: read
       issues: write
     steps:
       - name: Harden Runner
@@ -25,5 +26,6 @@ jobs:
         with:
           configuration-path: .github/workflows/config/labeler.yml
           # repo-token: ${{ secrets.TOKEN }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
           sync-labels: false
           dot: true
