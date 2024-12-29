@@ -65,6 +65,12 @@ jobs:
         uses: actions/attest-build-provenance@v2
         with:
           subject-path: ${{ github.workspace }}/custom_components/ipv64/ipv64.zip
+
+      - name: Debug attestation output
+        if: steps.checkTag.outputs.exists == 'false'
+        run: |
+          echo "Bundle path: ${{ steps.attestation.outputs.bundle-path }}"
+          ls -l "${{ steps.attestation.outputs.bundle-path }}"
       - name: Copy attestation
         if: steps.checkTag.outputs.exists == 'false'
         run: |
