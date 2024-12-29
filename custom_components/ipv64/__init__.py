@@ -4,12 +4,11 @@ from __future__ import annotations
 
 import logging
 
-import voluptuous as vol
-
 from homeassistant import config_entries
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers.typing import ConfigType
+import voluptuous as vol
 
 from .const import DATA_HASS_CONFIG, DATA_SCHEMA, DOMAIN, SERVICE_REFRESH
 from .coordinator import IPv64DataUpdateCoordinator
