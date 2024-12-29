@@ -136,7 +136,7 @@ jobs:
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
           file: ${{ github.workspace }}/custom_components/ipv64/ipv64.zip.sigstore
-          asset_name: ipv64.zip.asc
+          asset_name: ipv64.zip.sigstore
           tag: ${{ steps.version.outputs.version }}
           overwrite: true
 
