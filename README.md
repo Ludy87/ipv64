@@ -9,7 +9,7 @@
 [![GitHub stars](https://img.shields.io/github/stars/Ludy87/ipv64?style=for-the-badge&logo=GitHub&logoColor=white)](https://github.com/Ludy87/ipv64/stargazers)
 [![GitHub issues](https://img.shields.io/github/issues/Ludy87/ipv64?style=for-the-badge&logo=GitHub&logoColor=white)](https://github.com/Ludy87/ipv64/issues)
 ![Github All Releases](https://img.shields.io/github/downloads/Ludy87/ipv64/total.svg?style=for-the-badge&logo=GitHub&logoColor=white)\
-![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg?style=for-the-badge&logoColor=white)[![pre-commit.ci status](https://results.pre-commit.ci/badge/github/Ludy87/ipv64/main.svg?style=for-the-badge&logoColor=white)](https://results.pre-commit.ci/latest/github/Ludy87/ipv64/main)\
+![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg?style=for-the-badge&logoColor=white)[![pre-commit.ci status](https://results.pre-commit.ci/badge/github/Ludy87/ipv64/main.svg?style=for-the-badge&logoColor=white)](https://results.pre-commit.ci/latest/github/Ludy87/ipv64/main)[![OpenSSF Best Practices](https://www.bestpractices.dev/projects/9869/badge)](https://www.bestpractices.dev/projects/9869)\
 [![✨ Wishlist from Amazon ✨](https://img.shields.io/static/v1.svg?label=✨%20Wishlist%20from%20Amazon%20✨&message=📖&color=green&logo=amazon&style=for-the-badge&logoColor=white)](https://smile.amazon.de/registry/wishlist/2MX8QK8VE9MV1)
 [![Buy me a coffee](https://img.shields.io/static/v1.svg?label=Buy%20me%20a%20coffee&message=donate&style=for-the-badge&color=black&logo=buy%20me%20a%20coffee&logoColor=white&labelColor=orange)](https://www.buymeacoffee.com/ludy87)
 
