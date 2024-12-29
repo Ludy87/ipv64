@@ -62,7 +62,7 @@ jobs:
       - name: Generate artifact attestation
         if: steps.checkTag.outputs.exists == 'false'
         id: attestation
-        uses: actions/attest-build-provenance@v2
+        uses: actions/attest-build-provenance@7668571508540a607bdfd90a87a560489fe372eb # v2.1.0
         with:
           subject-path: ${{ github.workspace }}/custom_components/ipv64/ipv64.zip
 
