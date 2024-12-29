@@ -13,7 +13,9 @@ jobs:
   build:
     runs-on: ubuntu-latest
     permissions:
+      id-token: write
       contents: write
+      attestations: write
     steps:
       - name: Harden Runner
         uses: step-security/harden-runner@0080882f6c36860b6ba35c610c98ce87d4e2f26f # v2.10.2
@@ -56,6 +58,11 @@ jobs:
         run: |
           cd ${{ github.workspace }}/custom_components/ipv64
           zip -r ipv64.zip ./
+      - name: Generate artifact attestation
+        if: steps.checkTag.outputs.exists == 'false'
+        uses: actions/attest-build-provenance@v2
+        with:
+          subject-path: ${{ github.workspace }}/custom_components/ipv64/ipv64.zip
       - name: Import GPG key
         if: steps.checkTag.outputs.exists == 'false'
         env:
