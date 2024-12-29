@@ -77,5 +77,3 @@ logger:
   logs:
     custom_components.ipv64: debug
 ```
-
----
