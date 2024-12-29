@@ -17,7 +17,7 @@
 
 ---
 
-![IPv64](https://github.com/Ludy87/ipv64/blob/main/images/ipv64_logo.png?raw=true)
+[![IPv64](https://github.com/Ludy87/ipv64/blob/main/images/ipv64_logo.png?raw=true)](https://ipv64.net/account?p=fK4RZo)
 
 ## What is [IPv64.net](https://ipv64.net/account?p=fK4RZo)?
 
