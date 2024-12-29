@@ -87,8 +87,8 @@ jobs:
           PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
         run: |
           gpg --detach-sign --batch --yes --pinentry-mode loopback --passphrase "$PASSPHRASE" \
+            --output ${{ github.workspace }}/custom_components/ipv64/ipv64.zip.asc \
             -a ${{ github.workspace }}/custom_components/ipv64/ipv64.zip \
-            -o ${{ github.workspace }}/custom_components/ipv64/ipv64.zip.asc
 
       - name: Install In-Toto
         if: steps.checkTag.outputs.exists == 'false'
