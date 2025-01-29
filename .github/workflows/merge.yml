@@ -23,4 +23,4 @@ jobs:
         run: echo "is_pull_request=${{ github.event_name == 'pull_request' }}" >> $GITHUB_ENV
       - if: env.is_pull_request == 'true'
         name: Merge
-        uses: Ludy87/action/merge@89a88f7ffe6e51125119240ca55760e776156697 # v1.0.6
+        uses: Ludy87/action/merge@caa2185f8e7d1ba61c71879e8f150c9df5231035 # v1.0.8
