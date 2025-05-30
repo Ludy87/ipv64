@@ -1,5 +1,9 @@
 refresh:
+  name: "Refresh IP Address"
+  description: "Manually refresh the IP address. Note: Each refresh consumes 1 of your 64 daily tokens."
   fields:
     economy:
+      name: "Economy Mode"
+      description: "Enable economy mode (updates only when IP changes, checked via https://checkip.amazonaws.com/)."
       selector:
         boolean:

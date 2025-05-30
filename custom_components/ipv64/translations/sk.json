@@ -2,24 +2,24 @@
   "config": {
     "abort": {
       "already_configured": "Integrácia už bola nakonfigurovaná",
-      "single_instance_allowed": "Už je nakonfigurovaný. Je povolená iba jedna konfigurácia."
+      "single_instance_allowed": "Povolená je iba jedna konfigurácia."
     },
     "error": {
-      "domain_not_found": "Doména sa nenašla",
-      "invalid_api_key": "Neplatný kľúč API.",
-      "unauthorized": "Váš 'Token aktualizácie účtu' je nesprávny."
+      "domain_not_found": "Zadaná doména nebola nájdená vo vašom účte.",
+      "invalid_api_key": "Zadaný kľúč API je neplatný.",
+      "unauthorized": "Token aktualizácie účtu je nesprávny."
     },
     "step": {
       "user": {
         "data": {
-          "api_key_economy": "Šetrenie kľúčov API (aktualizácia sa volá pri zmene IP - IP sa kontroluje na https://checkip.amazonaws.com/)",
-          "apikey": "API kľúč",
+          "api_key_economy": "Povoliť ekonomický režim (aktualizácie iba pri zmene IP, overené cez https://checkip.amazonaws.com/)",
+          "apikey": "Kľúč API",
           "domain": "Doména",
-          "scan_interval": "Čas aktualizácie (0–120 minút 0=vypnuté)",
+          "scan_interval": "Interval aktualizácie (0–120 minút, 0=vypnuté)",
           "token": "Token aktualizácie účtu"
         },
-        "description": "S IPv64.net môžete spravovať svoje domény a používať rôzne funkcie vrátane aktualizácií DynDNS, podpory zástupných znakov a zdravotných kontrol. Služba ponúka aj API, pomocou ktorého môžete pristupovať k jej funkciám a spravovať svoje domény.\n\nNa prístup k IPv64.net API potrebujete token aktualizácie účtu a kľúč API. Pomocou týchto informácií môžete spravovať svoje domény, vykonávať aktualizácie a získavať ďalšie informácie o svojom účte.",
-        "title": "IPv64.net | Zdarma DynDNS2 & Healthcheck Service"
+        "description": "IPv64.net poskytuje služby DynDNS a zdravotné kontroly, ktoré umožňujú spravovať domény a udržiavať zariadenia dostupné aj pri dynamických IP adresách. Zadajte kľúč API a Token aktualizácie účtu na konfiguráciu integrácie.",
+        "title": "IPv64.net | Bezplatná služba DynDNS2 a Healthcheck"
       }
     }
   },
@@ -27,24 +27,24 @@
     "step": {
       "init": {
         "data": {
-          "api_key_economy": "Šetrenie kľúčov API (aktualizácia sa volá pri zmene IP - IP sa kontroluje na https://checkip.amazonaws.com/)",
-          "scan_interval": "Čas aktualizácie (0–120 minút 0=vypnuté)"
+          "api_key_economy": "Povoliť ekonomický režim (aktualizácie iba pri zmene IP, overené cez https://checkip.amazonaws.com/)",
+          "scan_interval": "Interval aktualizácie (0–120 minút, 0=vypnuté)"
         },
-        "description": "Upozorňujeme, že počet aktualizácií adresy IP závisí od stavu vášho účtu. S bezplatným účtom je 64 žiadostí za deň.\n\nOptimálne nastavenie je 23 minút (24:64x60=22.5 minút)",
-        "title": "čas aktualizácie"
+        "description": "Nakonfigurujte interval aktualizácie a ekonomický režim. S bezplatným účtom máte k dispozícii 64 aktualizácií denne. Odporúčaný interval je 23 minút (24 hodín ÷ 64 aktualizácií ≈ 22,5 minúty).",
+        "title": "Konfigurácia IPv64.net"
       }
     }
   },
   "services": {
     "refresh": {
-      "description": "IP adresa bude aktualizovaná. Upozorňujeme, že sa použije 1 zo 64 tokenov.",
+      "description": "Manuálne aktualizovať IP adresu. Poznámka: Každá aktualizácia spotrebuje 1 zo 64 denných tokenov.",
       "fields": {
         "economy": {
-          "description": "Šetrenie kľúčov API (aktualizácia sa volá pri zmene IP - IP sa kontroluje na https://checkip.amazonaws.com/)",
-          "name": "Economy-Modus"
+          "description": "Povoliť ekonomický režim (aktualizácie iba pri zmene IP, overené cez https://checkip.amazonaws.com/)",
+          "name": "Ekonomický režim"
         }
       },
-      "name": "Obnoviť IP-adresu"
+      "name": "Obnoviť IP adresu"
     }
   }
 }

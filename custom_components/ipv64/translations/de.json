@@ -1,25 +1,25 @@
 {
   "config": {
     "abort": {
-      "already_configured": "Die Integration wurde bereits konfiguriert.",
-      "single_instance_allowed": "Bereits konfiguriert. Es ist nur eine einzige Konfiguration erlaubt."
+      "already_configured": "Integration wurde bereits konfiguriert",
+      "single_instance_allowed": "Nur eine Konfiguration ist erlaubt."
     },
     "error": {
-      "domain_not_found": "Domain nicht gefunden.",
-      "invalid_api_key": "Ungültiger API-Schlüssel.",
-      "unauthorized": "Dein 'Account Update Token' ist falsch."
+      "domain_not_found": "Die angegebene Domain wurde in Ihrem Konto nicht gefunden.",
+      "invalid_api_key": "Der angegebene API-Schlüssel ist ungültig.",
+      "unauthorized": "Der Account Update Token ist ungültig."
     },
     "step": {
       "user": {
         "data": {
-          "api_key_economy": "API-Key Sparsamkeit (Update wird aufgerufen, wenn die IP sich ändert - IP wird bei https://checkip.amazonaws.com/ geprüft)",
+          "api_key_economy": "Economy-Modus aktivieren (Updates nur bei IP-Änderung, geprüft via https://checkip.amazonaws.com/)",
           "apikey": "API-Schlüssel",
           "domain": "Domain",
-          "scan_interval": "Aktualisierungszeit (0-120 Minuten 0=deaktiviert)",
+          "scan_interval": "Aktualisierungsintervall (0-120 Minuten, 0=deaktiviert)",
           "token": "Account Update Token"
         },
-        "description": "Mit IPv64.net können Sie Ihre Domänen verwalten und verschiedene Funktionen nutzen, darunter DynDNS-Updates, Wildcard-Unterstützung und Healthchecks. Der Dienst bietet auch eine API, über die Sie auf die Funktionen zugreifen und Ihre Domänen verwalten können.\n\nSie benötigen einen Account Update Token und einen API-Schlüssel, um auf die IPv64.net-API zugreifen zu können. Mit diesen Informationen können Sie Ihre Domänen verwalten, Updates durchführen und weitere Informationen zu Ihrem Konto abrufen.",
-        "title": "IPv64.net | Kostenloser DynDNS2- und Healthcheck-Dienst"
+        "description": "IPv64.net bietet DynDNS- und Healthcheck-Dienste, mit denen Sie Ihre Domains verwalten und Geräte trotz wechselnder IP-Adressen erreichbar halten können. Geben Sie Ihren API-Schlüssel und Account Update Token ein, um die Integration zu konfigurieren.",
+        "title": "IPv64.net | Kostenloser DynDNS2- & Healthcheck-Service"
       }
     }
   },
@@ -27,20 +27,20 @@
     "step": {
       "init": {
         "data": {
-          "api_key_economy": "API-Key Sparsamkeit (Update wird aufgerufen, wenn die IP sich ändert - IP wird bei https://checkip.amazonaws.com/ geprüft)",
-          "scan_interval": "Aktualisierungszeit (0-120 Minuten 0=deaktiviert)"
+          "api_key_economy": "Economy-Modus aktivieren (Updates nur bei IP-Änderung, geprüft via https://checkip.amazonaws.com/)",
+          "scan_interval": "Aktualisierungsintervall (0-120 Minuten, 0=deaktiviert)"
         },
-        "description": "Bitte beachte, dass je nach Kontostatus die Anzahl der IP-Adressaktualisierungen begrenzt sein kann. Mit dem kostenlosen Konto sind 64 Anfragen pro Tag möglich.\n\nDie optimale Einstellung beträgt 23 Minuten (24:64x60=22,5 Minuten).",
-        "title": "Aktualisierungszeit"
+        "description": "Konfigurieren Sie das Aktualisierungsintervall und den Economy-Modus. Mit einem kostenlosen Konto stehen Ihnen 64 Updates pro Tag zur Verfügung. Das empfohlene Intervall beträgt 23 Minuten (24 Stunden ÷ 64 Updates ≈ 22,5 Minuten).",
+        "title": "IPv64.net Konfiguration"
       }
     }
   },
   "services": {
     "refresh": {
-      "description": "Die IP-Adresse wird aktualisiert. Bitte beachten Sie, dass dabei 1 von 64 Tokens verwendet wird.",
+      "description": "IP-Adresse manuell aktualisieren. Beachten Sie: Jede Aktualisierung verbraucht 1 von 64 täglichen Tokens.",
       "fields": {
         "economy": {
-          "description": "Schonen des API-Schlüssels (Aktualisierung erfolgt nur, wenn sich die IP-Adresse ändert - IP wird über https://checkip.amazonaws.com/ überprüft)",
+          "description": "Economy-Modus aktivieren (Updates nur bei IP-Änderung, geprüft via https://checkip.amazonaws.com/)",
           "name": "Economy-Modus"
         }
       },

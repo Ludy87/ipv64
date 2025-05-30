@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
-import asyncio
 import logging
+from typing import Any
 
 import aiohttp
 import voluptuous as vol
@@ -11,6 +11,7 @@ import voluptuous as vol
 from homeassistant import config_entries, core
 from homeassistant.const import CONF_DOMAIN, CONF_SCAN_INTERVAL, CONF_TOKEN
 from homeassistant.data_entry_flow import FlowResult
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.selector import (
     BooleanSelector,
@@ -37,86 +38,88 @@ _LOGGER = logging.getLogger(__name__)
 
 
 class TokenError(Exception):
-    """Exception Token."""
+    """Exception for invalid token."""
 
 
 class APIKeyError(Exception):
-    """Exception API Key."""
+    """Exception for invalid API key."""
 
 
-async def check_domain_login(hass: core.HomeAssistant, data: dict[str, str]):
+class CannotConnect(HomeAssistantError):
+    """Error to indicate we cannot connect."""
+
+
+class DomainNotFound(HomeAssistantError):
+    """Error to indicate the domain was not found."""
+
+
+class InvalidAPIKey(HomeAssistantError):
+    """Error to indicate the API key is invalid."""
+
+
+async def check_domain_login(hass: core.HomeAssistant, data: dict[str, Any]) -> dict[str, Any]:
     """Check the domain login information."""
     result = {}
-
     session: aiohttp.ClientSession = async_get_clientsession(hass)
-
     headers_api = {"Authorization": f"Bearer {data[CONF_API_KEY]}"}
 
-    result.update(await get_account_info(session, headers_api, data, result))
-    result.update(await get_domains(session, headers_api))
+    try:
+        result.update(await get_account_info(session, headers_api, data))
+        domains = await get_domains(session, headers_api)
+        if data[CONF_DOMAIN] not in domains.get("subdomains", {}):
+            _LOGGER.error("Domain %s not found in account", data[CONF_DOMAIN])
+            raise TokenError("Domain not found")
+        result.update(domains)
+    except aiohttp.ClientResponseError as error:
+        _LOGGER.error("API request failed: %s | Status: %d", error.message, error.status)
+        raise APIKeyError from error
     return result
 
 
-async def get_domains(session: aiohttp.ClientSession, headers_api: dict):
-    """Fetches domain information from the IPv64.net API."""  # noqa: D401
-    async with asyncio.timeout(TIMEOUT):
-        try:
-            resp = await session.get(GET_DOMAIN_URL, headers=headers_api, raise_for_status=True)
-            result = dict(await resp.json())
-        except aiohttp.ClientResponseError as error:
-            _LOGGER.error(
-                "get_domains: Your 'API Key' is incorrect. Error: %s | Status: %i",
-                error.message,
-                error.status,
-            )
-            raise TokenError() from error
-    return result
+async def get_domains(session: aiohttp.ClientSession, headers_api: dict[str, str]) -> dict[str, Any]:
+    """Fetches domain information from the IPv64.net API."""
+    async with aiohttp.ClientSession().get(GET_DOMAIN_URL, headers=headers_api, timeout=TIMEOUT) as resp:
+        resp.raise_for_status()
+        return await resp.json()
 
 
 async def get_account_info(
     session: aiohttp.ClientSession,
-    headers_api: dict,
-    data: dict[str, str],
-    result: dict = None,
-) -> dict:
-    """Fetches account information from the IPv64.net API and updates the result."""  # noqa: D401
+    headers_api: dict[str, str],
+    data: dict[str, Any],
+    result: dict[str, Any] | None = None,
+) -> dict[str, Any]:
+    """Fetches account information from the IPv64.net API."""
     if result is None:
         result = {}
-    async with asyncio.timeout(TIMEOUT):
-        try:
-            resp_account_info = await session.get(GET_ACCOUNT_INFO_URL, headers=headers_api, raise_for_status=True)
-            account_result: dict = await resp_account_info.json()
-            if account_result.get("update_hash") != data[CONF_TOKEN]:
-                raise APIKeyError()
-            result.update(
-                {
-                    CONF_DAILY_UPDATE_LIMIT: account_result["account_class"]["dyndns_update_limit"],
-                    CONF_DYNDNS_UPDATES: account_result[CONF_DYNDNS_UPDATES],
-                    "dyndns_domain_limit": account_result["account_class"]["dyndns_domain_limit"],
-                    "api_limit": account_result["account_class"]["api_limit"],
-                    "sms_limit": account_result["account_class"]["sms_limit"],
-                    "owndomain_limit": account_result["account_class"]["owndomain_limit"],
-                    "healthcheck_update_limit": account_result["account_class"]["healthcheck_update_limit"],
-                    "healthcheck_limit": account_result["account_class"]["healthcheck_limit"],
-                    "sms_count": account_result["sms_count"],
-                    "api_updates": account_result["api_updates"],
-                    "account": account_result["account_class"]["class_name"],
-                }
-            )
-            for k, v in account_result.items():
-                if k not in EXCLUDED_KEYS:
-                    result.setdefault(k, v)
-        except aiohttp.ClientResponseError as error:
-            _LOGGER.error(
-                "get_account_info: Your 'API Key' is incorrect. Error: %s | Status: %i",
-                error.message,
-                error.status,
-            )
-            raise APIKeyError() from error
-    return result
+    async with aiohttp.ClientSession().get(GET_ACCOUNT_INFO_URL, headers=headers_api, timeout=TIMEOUT) as resp:
+        resp.raise_for_status()
+        account_result = await resp.json()
+        if account_result.get("update_hash") != data[CONF_TOKEN]:
+            _LOGGER.error("Invalid Account Update Token")
+            raise APIKeyError
+        result.update(
+            {
+                CONF_DAILY_UPDATE_LIMIT: account_result["account_class"]["dyndns_update_limit"],
+                CONF_DYNDNS_UPDATES: account_result[CONF_DYNDNS_UPDATES],
+                "dyndns_domain_limit": account_result["account_class"]["dyndns_domain_limit"],
+                "api_limit": account_result["account_class"]["api_limit"],
+                "sms_limit": account_result["account_class"]["sms_limit"],
+                "owndomain_limit": account_result["account_class"]["owndomain_limit"],
+                "healthcheck_update_limit": account_result["account_class"]["healthcheck_update_limit"],
+                "healthcheck_limit": account_result["account_class"]["healthcheck_limit"],
+                "sms_count": account_result["sms_count"],
+                "api_updates": account_result["api_updates"],
+                "account": account_result["account_class"]["class_name"],
+            }
+        )
+        for k, v in account_result.items():
+            if k not in EXCLUDED_KEYS:
+                result.setdefault(k, v)
+        return result
 
 
-async def validate_input(hass: core.HomeAssistant, data: dict[str, str]) -> dict[str, str]:
+async def validate_input(hass: core.HomeAssistant, data: dict[str, Any]) -> dict[str, Any]:
     """Validate the user input for domain login."""
     result = await check_domain_login(hass, data)
     return {"title": f"{DOMAIN} {data[CONF_DOMAIN]}", "data": result}
@@ -129,33 +132,20 @@ class IPv64ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @core.callback
-    def async_get_options_flow(
-        config_entry: config_entries.ConfigEntry,
-    ) -> config_entries.OptionsFlow:
+    def async_get_options_flow(config_entry: config_entries.ConfigEntry) -> config_entries.OptionsFlow:
         """Get the options flow for this handler."""
         return IPv64OptionsFlowHandler(config_entry)
 
-    async def async_step_user(self, user_input=None):
+    async def async_step_user(self, user_input: dict[str, Any] | None = None) -> FlowResult:
         """Handle the initial user step."""
         errors: dict[str, str] = {}
         if user_input is not None:
             unique_id = f"{user_input[CONF_DOMAIN]}"
             await self.async_set_unique_id(unique_id)
-
             self._abort_if_unique_id_configured()
-
-            info = None
 
             try:
                 info = await validate_input(self.hass, user_input)
-            except TokenError:
-                errors["base"] = "unauthorized"
-            except APIKeyError:
-                errors["base"] = "invalid_api_key"
-
-            if info and user_input[CONF_DOMAIN] not in info["data"]["subdomains"]:
-                errors["base"] = "domain_not_found"
-            elif not errors:
                 return self.async_create_entry(
                     title=info["title"],
                     data={
@@ -168,27 +158,41 @@ class IPv64ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                         CONF_API_ECONOMY: user_input[CONF_API_ECONOMY],
                     },
                 )
+            except TokenError:
+                errors["base"] = "domain_not_found"
+            except APIKeyError:
+                errors["base"] = "invalid_api_key"
+            except (TimeoutError, aiohttp.ClientError) as err:
+                _LOGGER.exception("Unexpected error: %s", err)
+                errors["base"] = "unknown"
 
         return self.async_show_form(
             step_id="user",
             data_schema=vol.Schema(DATA_SCHEMA),
             errors=errors,
             last_step=False,
+            description_placeholders={
+                "description": "Enter your IPv64.net credentials to manage your domains and use DynDNS features."
+            },
         )
 
 
 class IPv64OptionsFlowHandler(config_entries.OptionsFlowWithConfigEntry):
     """Handle the options flow for IPv64."""
 
-    async def async_step_init(self, user_input: dict[str, any] | None = None) -> FlowResult:
+    async def async_step_init(self, user_input: dict[str, Any] | None = None) -> FlowResult:
         """Handle the options flow initialization step."""
         options = self.options
         data_schema = vol.Schema(
             {
-                vol.Required(CONF_API_ECONOMY, default=options.get(CONF_API_ECONOMY, False)): BooleanSelector(
-                    BooleanSelectorConfig()
-                ),
-                vol.Required(CONF_SCAN_INTERVAL, default=options.get(CONF_SCAN_INTERVAL, 23)): NumberSelector(
+                vol.Required(
+                    CONF_API_ECONOMY,
+                    default=options.get(CONF_API_ECONOMY, False),
+                ): BooleanSelector(BooleanSelectorConfig()),
+                vol.Required(
+                    CONF_SCAN_INTERVAL,
+                    default=options.get(CONF_SCAN_INTERVAL, 23),
+                ): NumberSelector(
                     NumberSelectorConfig(
                         mode=NumberSelectorMode.SLIDER,
                         min=0,
@@ -201,4 +205,9 @@ class IPv64OptionsFlowHandler(config_entries.OptionsFlowWithConfigEntry):
         if user_input is not None:
             return self.async_create_entry(data=user_input)
 
-        return self.async_show_form(step_id="init", data_schema=data_schema, last_step=True)
+        return self.async_show_form(
+            step_id="init",
+            data_schema=data_schema,
+            last_step=True,
+            description_placeholders={"description": "Configure update interval and economy mode for IPv64.net."},
+        )
