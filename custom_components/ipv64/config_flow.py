@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+import re
 from typing import Any
 
 import aiohttp
@@ -22,6 +23,7 @@ from homeassistant.helpers.selector import (
 )
 
 from .const import (
+    ALLOWED_DOMAINS,
     CONF_API_ECONOMY,
     CONF_API_KEY,
     CONF_DAILY_UPDATE_LIMIT,
@@ -35,6 +37,9 @@ from .const import (
 )
 
 _LOGGER = logging.getLogger(__name__)
+
+# Regex für gültige Domainnamen (z. B. subdomain.ipv64.net oder prefix.subdomain.home64.de)
+DOMAIN_REGEX = r"^(?!-)[A-Za-z0-9-]{1,63}(?<!-)(\.[A-Za-z0-9-]{1,63})+$"
 
 
 class TokenError(Exception):
@@ -57,28 +62,13 @@ class InvalidAPIKey(HomeAssistantError):
     """Error to indicate the API key is invalid."""
 
 
-async def check_domain_login(hass: core.HomeAssistant, data: dict[str, Any]) -> dict[str, Any]:
-    """Check the domain login information."""
-    result = {}
-    session: aiohttp.ClientSession = async_get_clientsession(hass)
-    headers_api = {"Authorization": f"Bearer {data[CONF_API_KEY]}"}
-
-    try:
-        result.update(await get_account_info(session, headers_api, data))
-        domains = await get_domains(session, headers_api)
-        if data[CONF_DOMAIN] not in domains.get("subdomains", {}):
-            _LOGGER.error("Domain %s not found in account", data[CONF_DOMAIN])
-            raise TokenError("Domain not found")
-        result.update(domains)
-    except aiohttp.ClientResponseError as error:
-        _LOGGER.error("API request failed: %s | Status: %d", error.message, error.status)
-        raise APIKeyError from error
-    return result
+class InvalidDomain(HomeAssistantError):
+    """Error to indicate the domain format is invalid."""
 
 
 async def get_domains(session: aiohttp.ClientSession, headers_api: dict[str, str]) -> dict[str, Any]:
     """Fetches domain information from the IPv64.net API."""
-    async with aiohttp.ClientSession().get(GET_DOMAIN_URL, headers=headers_api, timeout=TIMEOUT) as resp:
+    async with session.get(GET_DOMAIN_URL, headers=headers_api, timeout=TIMEOUT) as resp:
         resp.raise_for_status()
         return await resp.json()
 
@@ -92,12 +82,9 @@ async def get_account_info(
     """Fetches account information from the IPv64.net API."""
     if result is None:
         result = {}
-    async with aiohttp.ClientSession().get(GET_ACCOUNT_INFO_URL, headers=headers_api, timeout=TIMEOUT) as resp:
+    async with session.get(GET_ACCOUNT_INFO_URL, headers=headers_api, timeout=TIMEOUT) as resp:
         resp.raise_for_status()
         account_result = await resp.json()
-        if account_result.get("update_hash") != data[CONF_TOKEN]:
-            _LOGGER.error("Invalid Account Update Token")
-            raise APIKeyError
         result.update(
             {
                 CONF_DAILY_UPDATE_LIMIT: account_result["account_class"]["dyndns_update_limit"],
@@ -119,8 +106,57 @@ async def get_account_info(
         return result
 
 
+async def check_domain_login(hass: core.HomeAssistant, data: dict[str, Any]) -> dict[str, Any]:
+    """Check the domain login information."""
+    result = {}
+    session: aiohttp.ClientSession = async_get_clientsession(hass)
+    headers_api = {"Authorization": f"Bearer {data[CONF_API_KEY]}"}
+
+    # Validate domain against allowed domains
+    input_domain = data[CONF_DOMAIN]
+    if not any(input_domain.endswith(allowed_domain) for allowed_domain in ALLOWED_DOMAINS):
+        _LOGGER.error("Domain %s is not one of the allowed domains: %s", input_domain, ALLOWED_DOMAINS)
+        raise InvalidDomain(f"Domain {input_domain} is not allowed. Allowed domains: {', '.join(ALLOWED_DOMAINS)}")
+
+    try:
+        result.update(await get_account_info(session, headers_api, data))
+        domains = await get_domains(session, headers_api)
+        subdomains = domains.get("subdomains", {})
+        found = False
+        for subdomain, subdomain_data in subdomains.items():
+            _LOGGER.debug("Checking subdomain %s against input domain %s", subdomain, input_domain)
+            # Check if input_domain is the main subdomain or a prefixed subdomain
+            for record in subdomain_data.get("records", []):
+                prefixed_domain = f"{record['praefix']}.{subdomain}" if record.get("praefix") else subdomain
+                _LOGGER.debug("Comparing input domain %s with %s", input_domain, prefixed_domain)
+                if input_domain == prefixed_domain:
+                    found = True
+                    break
+            if found:
+                break
+        if not found:
+            _LOGGER.error("Domain %s not found in account subdomains", input_domain)
+            raise TokenError(f"Domain {input_domain} not found")
+        result.update(domains)
+    except aiohttp.ClientResponseError as error:
+        _LOGGER.error("API request failed: %s | Status: %d", error.message, error.status)
+        if error.status == 401:
+            raise APIKeyError("Invalid API key") from error
+        elif error.status == 429:
+            raise CannotConnect("Rate limit exceeded: Maximum 3 requests per 10 seconds") from error
+        raise APIKeyError(f"API error: {error.message}") from error
+    except (TimeoutError, aiohttp.ClientError) as error:
+        _LOGGER.error("Network error during API request: %s", error)
+        raise CannotConnect(f"Network error: {error}") from error
+    return result
+
+
 async def validate_input(hass: core.HomeAssistant, data: dict[str, Any]) -> dict[str, Any]:
     """Validate the user input for domain login."""
+    # Validate domain format
+    if not re.match(DOMAIN_REGEX, data[CONF_DOMAIN]):
+        _LOGGER.error("Invalid domain format: %s", data[CONF_DOMAIN])
+        raise InvalidDomain("Ungültiges Domain-Format")
     result = await check_domain_login(hass, data)
     return {"title": f"{DOMAIN} {data[CONF_DOMAIN]}", "data": result}
 
@@ -140,12 +176,13 @@ class IPv64ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle the initial user step."""
         errors: dict[str, str] = {}
         if user_input is not None:
-            unique_id = f"{user_input[CONF_DOMAIN]}"
-            await self.async_set_unique_id(unique_id)
-            self._abort_if_unique_id_configured()
-
             try:
+                _LOGGER.error("Received user input: %s", user_input)
                 info = await validate_input(self.hass, user_input)
+                unique_id = f"{user_input[CONF_DOMAIN]}_{self.hass.data.get(DOMAIN, {}).get('entry_count', 0)}"
+                await self.async_set_unique_id(unique_id)
+                self._abort_if_unique_id_configured()
+
                 return self.async_create_entry(
                     title=info["title"],
                     data={
@@ -158,12 +195,16 @@ class IPv64ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                         CONF_API_ECONOMY: user_input[CONF_API_ECONOMY],
                     },
                 )
+            except InvalidDomain:
+                errors["base"] = "invalid_domain"
             except TokenError:
                 errors["base"] = "domain_not_found"
             except APIKeyError:
                 errors["base"] = "invalid_api_key"
-            except (TimeoutError, aiohttp.ClientError) as err:
-                _LOGGER.exception("Unexpected error: %s", err)
+            except CannotConnect:
+                errors["base"] = "cannot_connect"
+            except Exception as err:
+                _LOGGER.exception("Unexpected error during validation: %s", err)
                 errors["base"] = "unknown"
 
         return self.async_show_form(
@@ -172,7 +213,7 @@ class IPv64ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             errors=errors,
             last_step=False,
             description_placeholders={
-                "description": "Enter your IPv64.net credentials to manage your domains and use DynDNS features."
+                "description": "Geben Sie Ihre IPv64.net-Anmeldedaten ein, um Ihre Domains zu verwalten. API-Schlüssel und Update-Token finden Sie in Ihrem IPv64.net-Konto."
             },
         )
 
@@ -187,7 +228,7 @@ class IPv64OptionsFlowHandler(config_entries.OptionsFlowWithConfigEntry):
             {
                 vol.Required(
                     CONF_API_ECONOMY,
-                    default=options.get(CONF_API_ECONOMY, False),
+                    default=options.get(CONF_API_ECONOMY, True),
                 ): BooleanSelector(BooleanSelectorConfig()),
                 vol.Required(
                     CONF_SCAN_INTERVAL,
@@ -197,6 +238,7 @@ class IPv64OptionsFlowHandler(config_entries.OptionsFlowWithConfigEntry):
                         mode=NumberSelectorMode.SLIDER,
                         min=0,
                         max=120,
+                        step=1,
                         unit_of_measurement="minutes",
                     )
                 ),
@@ -209,5 +251,7 @@ class IPv64OptionsFlowHandler(config_entries.OptionsFlowWithConfigEntry):
             step_id="init",
             data_schema=data_schema,
             last_step=True,
-            description_placeholders={"description": "Configure update interval and economy mode for IPv64.net."},
+            description_placeholders={
+                "description": "Konfigurieren Sie das Aktualisierungsintervall und den Economy-Modus für IPv64.net."
+            },
         )
