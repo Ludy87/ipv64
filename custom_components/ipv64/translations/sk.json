@@ -5,9 +5,12 @@
       "single_instance_allowed": "Povolená je iba jedna konfigurácia."
     },
     "error": {
-      "domain_not_found": "Zadaná doména nebola nájdená vo vašom účte.",
+      "domain_not_found": "Zadaná doména (napr. ludy1987.ipv64.de alebo peter.ludy1987.home64.de) nebola nájdená vo vašom účte. Skontrolujte zadanie.",
       "invalid_api_key": "Zadaný kľúč API je neplatný.",
-      "unauthorized": "Token aktualizácie účtu je nesprávny."
+      "unauthorized": "Token aktualizácie účtu je neplatný.",
+      "retry_limit_exceeded": "Zlyhalo pripojenie k IPv64.net po viacerých pokusoch. Skontrolujte svoje sieťové pripojenie.",
+      "invalid_domain": "Zadaná doména má neplatný formát alebo nie je povolená. Povolené domény: ipv64.net, ipv64.de, any64.de, eth64.de, home64.de, iot64.de, lan64.de, nas64.de, srv64.de, tcp64.de, udp64.de, vpn64.de, wan64.de, api64.de, dyndns64.de, dynipv6.de, dns64.de, root64.de, route64.de.",
+      "cannot_connect": "Chyba siete: Nepodarilo sa nadviazať spojenie s IPv64.net. Skontrolujte svoje pripojenie k internetu."
     },
     "step": {
       "user": {
@@ -45,6 +48,34 @@
         }
       },
       "name": "Obnoviť IP adresu"
+    },
+    "add_domain": {
+      "description": "Vytvoriť novú doménu cez API IPv64.net (napr. test1234.any64.de).",
+      "fields": {
+        "domain": {
+          "description": "Doména, ktorá sa má vytvoriť (musí byť jednou z povolených domén: ipv64.net, ipv64.de, any64.de, atď.).",
+          "name": "Doména"
+        }
+      },
+      "name": "Pridať doménu"
+    },
+    "delete_domain": {
+      "description": "Odstrániť existujúcu doménu cez API IPv64.net (napr. test1234.any64.de).",
+      "fields": {
+        "domain": {
+          "description": "Doména, ktorá sa má odstrániť (musí byť jednou z povolených domén: ipv64.net, ipv64.de, any64.de, atď.).",
+          "name": "Doména"
+        }
+      },
+      "name": "Odstrániť doménu"
+    }
+  },
+  "entity": {
+    "sensor": {
+      "wildcard": {
+        "name": "Podpora zástupných znakov",
+        "description": "Ukazuje, či má doména aktivovanú podporu zástupných znakov."
+      }
     }
   }
 }

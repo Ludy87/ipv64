@@ -8,7 +8,6 @@ from homeassistant import config_entries
 from homeassistant.components.persistent_notification import async_create
 from homeassistant.const import CONF_DOMAIN, Platform
 from homeassistant.core import HomeAssistant, ServiceCall
-from homeassistant.exceptions import HomeAssistantError
 
 from .const import (
     CONF_API_ECONOMY,
@@ -110,7 +109,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: config_entries.ConfigEnt
             _LOGGER.error("No domain provided for add_domain service")
             async_create(
                 hass,
-                f"IPv64.net: Keine Domain für add_domain-Service angegeben.",
+                "IPv64.net: Keine Domain für add_domain-Service angegeben.",
                 title="IPv64.net Service-Fehler",
                 notification_id=f"{DOMAIN}_{entry_id}_add_domain_error",
             )
@@ -151,7 +150,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: config_entries.ConfigEnt
             _LOGGER.error("No domain provided for delete_domain service")
             async_create(
                 hass,
-                f"IPv64.net: Keine Domain für delete_domain-Service angegeben.",
+                "IPv64.net: Keine Domain für delete_domain-Service angegeben.",
                 title="IPv64.net Service-Fehler",
                 notification_id=f"{DOMAIN}_{entry_id}_delete_domain_error",
             )

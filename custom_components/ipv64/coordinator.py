@@ -287,18 +287,18 @@ class IPv64DataUpdateCoordinator(DataUpdateCoordinator):
             self.data = {CONF_DOMAIN: self.config_entry.data.get(CONF_DOMAIN, "")}
 
         # Load cached data if not forced to refresh
-        cached_data = await self._cache.async_load() if not force_refresh else None
-        if cached_data and not is_economy and not force_refresh:
-            cache_time = cached_data.get("cache_time")
-            if (
-                cache_time
-                and datetime.fromisoformat(cache_time) > datetime.now() - timedelta(hours=1)
-                and cached_data.get("subdomains") is not None
-                and cached_data.get("account") is not None
-            ):
-                _LOGGER.debug("Utilizing cached data for %s", self.config_entry.data.get(CONF_DOMAIN))
-                self.data = cached_data
-                return self.data
+        # cached_data = await self._cache.async_load() if not force_refresh else None
+        # if cached_data and not is_economy and not force_refresh:
+        #     cache_time = cached_data.get("cache_time")
+        #     if (
+        #         cache_time
+        #         and datetime.fromisoformat(cache_time) > datetime.now() - timedelta(hours=1)
+        #         and cached_data.get("subdomains") is not None
+        #         and cached_data.get("account") is not None
+        #     ):
+        #         _LOGGER.debug("Utilizing cached data for %s", self.config_entry.data.get(CONF_DOMAIN))
+        #         self.data = cached_data
+        #         return self.data
 
         session = async_get_clientsession(self.hass)
         headers_api = {"Authorization": f"Bearer {self.config_entry.data.get(CONF_API_KEY, '')}"}
@@ -454,7 +454,14 @@ class IPv64DataUpdateCoordinator(DataUpdateCoordinator):
                 async with session.get(CHECKIP_URL, timeout=TIMEOUT) as request:
                     request.raise_for_status()
                     current_ip = (await request.text()).strip()
-                    stored_ip = self.data.get(CONF_IP_ADDRESS, "unknown")
+                    _LOGGER.error("Current IP for %s: %s", self.config_entry.data.get(CONF_DOMAIN), current_ip)
+                    # Find the stored IP address for the configured domain
+                    stored_ip = "unknown"
+                    for subdomain in self.data.get("subdomains", []):
+                        if subdomain.get("domain") == self.config_entry.data.get(CONF_DOMAIN):
+                            stored_ip = subdomain.get("ip_address", "unknown")
+                            break
+                    _LOGGER.error("Stored IP for %s: %s", self.config_entry.data.get(CONF_DOMAIN), stored_ip)
                     ip_changed = current_ip != stored_ip
                     _LOGGER.debug(
                         "IP comparison for %s: stored=%s, current=%s, changed=%s",

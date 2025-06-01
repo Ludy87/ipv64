@@ -5,47 +5,77 @@
       "single_instance_allowed": "Only a single configuration is allowed."
     },
     "error": {
-      "domain_not_found": "The specified domain was not found in your account.",
+      "domain_not_found": "The specified domain (e.g., ludy1987.ipv64.de or peter.ludy1987.home64.de) was not found in your account. Please check your input.",
       "invalid_api_key": "The provided API key is invalid.",
       "unauthorized": "The Account Update Token is invalid.",
-      "retry_limit_exceeded": "Failed to connect to IPv64.net after multiple attempts. Please check your network."
+      "retry_limit_exceeded": "Failed to connect to IPv64.net after multiple attempts. Please check your network.",
+      "invalid_domain": "The entered domain has an invalid format or is not allowed. Allowed domains: ipv64.net, ipv64.de, any64.de, eth64.de, home64.de, iot64.de, lan64.de, nas64.de, srv64.de, tcp64.de, udp64.de, vpn64.de, wan64.de, api64.de, dyndns64.de, dynipv6.de, dns64.de, root64.de, route64.de.",
+      "cannot_connect": "Network error: Could not establish a connection to IPv64.net. Please check your internet connection."
     },
     "step": {
       "user": {
         "data": {
-          "api_key_economy": "Enable economy mode (updates only when IP changes)",
+          "api_key_economy": "Enable economy mode (updates only when IP changes, checked via https://checkip.amazonaws.com/)",
           "apikey": "API Key",
           "domain": "Domain",
-          "scan_interval": "Update interval (0-60 minutes, 0=disabled)",
+          "scan_interval": "Update interval (0-120 minutes, 0=disabled)",
           "token": "Account Update Token"
         },
         "description": "IPv64.net provides DynDNS and healthcheck services, allowing you to manage domains and keep devices accessible despite changing IP addresses. Enter your API key and Account Update Token to set up the integration.",
-        "title": "IPv64.net"
+        "title": "IPv64.net | Free DynDNS2 & Healthcheck Service"
       }
-    },
+    }
+  },
   "options": {
     "step": {
       "init": {
         "data": {
-          "api_key_economy": "Enable economy mode (updates only when IP changes)",
-          "scan_interval": "Update interval (0-60 minutes, 0=disabled)"
+          "api_key_economy": "Enable economy mode (updates only when IP changes, checked via https://checkip.amazonaws.com/)",
+          "scan_interval": "Update interval (0-120 minutes, 0=disabled)"
         },
-        "description": "Configure the update interval and economy mode. Free accounts have 64 updates per day. Recommended interval: 23 minutes (24 hours ÷ 64 ≈ 22.5 minutes).",
-        "title": "IPv64.net Options"
+        "description": "Configure the update interval and economy mode. Free accounts have 64 updates per day. Recommended interval: 23 minutes (24 hours ÷ 64 updates ≈ 22.5 minutes).",
+        "title": "IPv64.net Configuration"
       }
     }
   },
   "services": {
     "refresh": {
       "name": "Refresh IP Address",
-      "description": "Manually refresh the IP address. Note: This consumes one of your 64 daily tokens (free account).",
+      "description": "Manually refresh the IP address. Note: Each update consumes one of your 64 daily tokens.",
       "fields": {
         "economy": {
           "name": "Economy Mode",
-          "description": "Enable economy mode to update only when the IP changes."
+          "description": "Enable economy mode (updates only when IP changes, checked via https://checkip.amazonaws.com/)"
         }
+      }
+    },
+    "add_domain": {
+      "description": "Create a new domain via the IPv64.net API (e.g., test1234.any64.de).",
+      "fields": {
+        "domain": {
+          "description": "The domain to be created (must be one of the allowed domains: ipv64.net, ipv64.de, any64.de, etc.).",
+          "name": "Domain"
+        }
+      },
+      "name": "Add Domain"
+    },
+    "delete_domain": {
+      "description": "Delete an existing domain via the IPv64.net API (e.g., test1234.any64.de).",
+      "fields": {
+        "domain": {
+          "description": "The domain to be deleted (must be one of the allowed domains: ipv64.net, ipv64.de, any64.de, etc.).",
+          "name": "Domain"
+        }
+      },
+      "name": "Delete Domain"
+    }
+  },
+  "entity": {
+    "sensor": {
+      "wildcard": {
+        "name": "Wildcard Support",
+        "description": "Indicates whether the domain has wildcard support enabled."
       }
     }
   }
-}
 }
