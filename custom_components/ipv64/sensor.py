@@ -32,18 +32,19 @@ _LOGGER = logging.getLogger(__name__)
 class IPv64BaseEntity(CoordinatorEntity[IPv64DataUpdateCoordinator], RestoreSensor):
     """Base entity class for IPv64."""
 
+    _attr_available = False
     _attr_force_update = False
 
     def __init__(self, coordinator: IPv64DataUpdateCoordinator, domain: str) -> None:
         """Initialize the IPv64 base entity."""
         super().__init__(coordinator)
         self._attr_attribution = "Data provided by IPv64.net | Free DynDNS2 & Healthcheck Service"
-        self._data = DeviceInfo(
-            identifiers={(DOMAIN, f"{domain}")},
+        self._device_info = DeviceInfo(
+            identifiers={(DOMAIN, domain)},
             manufacturer="IPv64.net",
             model="DynDNS2 & Healthcheck DNS Service",
             name=f"{SHORT_NAME} {domain}",
-            via_device=(SHORT_NAME, f"{domain}"),
+            via_device=(SHORT_NAME, domain),
         )
         self._unsub_dispatchers: list[Callable[[], None]] = []
 
@@ -59,11 +60,11 @@ class IPv64BaseEntity(CoordinatorEntity[IPv64DataUpdateCoordinator], RestoreSens
         for unsub in self._unsub_dispatchers[:]:
             unsub()
             self._unsub_dispatchers.remove(unsub)
-        _LOGGER.debug("Entity removed from Home Assistant")
+        _LOGGER.debug("Entity %s removed from Home Assistant", self.entity_id)
 
     async def async_update(self) -> None:
         """Perform an async update."""
-        _LOGGER.debug("Updating entity data via coordinator")
+        _LOGGER.debug("Updating entity %s via coordinator", self.entity_id)
 
 
 class IPv64DynDNSStatusSensor(IPv64BaseEntity, SensorEntity):
@@ -72,8 +73,8 @@ class IPv64DynDNSStatusSensor(IPv64BaseEntity, SensorEntity):
     def __init__(self, coordinator: IPv64DataUpdateCoordinator) -> None:
         """Initialize the IPv64 DynDNS sensor."""
         super().__init__(coordinator, coordinator.data[CONF_DOMAIN])
-        self._attr_name = f"{SHORT_NAME} DynDNS Status"
-        self._attr_unique_id = f"{DOMAIN}_dyndns_status"
+        self._attr_name = f"{SHORT_NAME} {coordinator.data[CONF_DOMAIN]} Status"
+        self._attr_unique_id = f"{DOMAIN}_{coordinator.data[CONF_DOMAIN]}_status"
 
     @property
     def native_value(self) -> StateType:
@@ -111,8 +112,8 @@ class IPv64SettingSensor(IPv64BaseEntity, SensorEntity):
     ) -> None:
         """Initialize the IPv64 setting sensor."""
         super().__init__(coordinator, coordinator.data[CONF_DOMAIN])
-        self._attr_name = f"{SHORT_NAME} {name}"
-        self._attr_unique_id = f"{DOMAIN}_{key}_"
+        self._attr_name = f"{SHORT_NAME} {coordinator.data[CONF_DOMAIN]} {name}"
+        self._attr_unique_id = f"{DOMAIN}_{coordinator.data[CONF_DOMAIN]}_{key}"
         self._key = key
         self._attr_key = attr_key
 
@@ -140,7 +141,7 @@ class IPv64DomainSensor(IPv64BaseEntity, SensorEntity):
         super().__init__(coordinator, subdomain[CONF_DOMAIN])
         self._subdomain = subdomain
         self._attr_name = f"{SHORT_NAME} {subdomain[CONF_DOMAIN]} IP"
-        self._attr_unique_id = f"{DOMAIN}_subdomain_{subdomain[CONF_DOMAIN]}"
+        self._attr_unique_id = f"{DOMAIN}_{subdomain[CONF_DOMAIN]}_ip"
 
     @property
     def native_value(self) -> StateType:
@@ -153,30 +154,17 @@ class IPv64DomainSensor(IPv64BaseEntity, SensorEntity):
         data = super().extra_state_attributes or {}
         if self.coordinator.data:
             subdomain_data = {k: v for k, v in self._subdomain.items() if k != "subdomains"}
+            # Add wildcard information if available
+            main_domain = (
+                self._subdomain[CONF_DOMAIN].split(".", 1)[1]
+                if "." in self._subdomain[CONF_DOMAIN]
+                else self._subdomain[CONF_DOMAIN]
+            )
+            metadata = self.coordinator.data.get(f"{main_domain}_metadata", {})
+            if metadata.get("wildcard"):
+                subdomain_data["wildcard"] = metadata["wildcard"]
             return {**data, **subdomain_data}
         return data
-
-
-class IPv64DomainUpdateSensor(IPv64BaseEntity, SensorEntity):
-    """Sensor for IPv64 domain update status."""
-
-    def __init__(self, coordinator: IPv64DataUpdateCoordinator, subdomain: dict[str, Any]) -> None:
-        """Initialize the IPv64 domain update sensor."""
-        super().__init__(coordinator, subdomain[CONF_DOMAIN])
-        self._subdomain = subdomain
-        self._attr_name = f"{SHORT_NAME} {subdomain[CONF_DOMAIN]} Update"
-        self._attr_unique_id = f"{DOMAIN}_{subdomain[CONF_DOMAIN]}_update"
-
-    @property
-    def native_value(self) -> StateType:
-        """Return the native value of the sensor."""
-        return self.coordinator.data.get("update_result", "unknown")
-
-    @property
-    def extra_state_attributes(self) -> dict[str, Any]:
-        """Return the extra state attributes of the sensor."""
-        data = super().extra_state_attributes or {}
-        return {**data, CONF_IP_ADDRESS: self._subdomain.get(CONF_IP_ADDRESS, "unknown")}
 
 
 class IPv64RemainingUpdatesSensor(IPv64BaseEntity, SensorEntity):
@@ -187,8 +175,8 @@ class IPv64RemainingUpdatesSensor(IPv64BaseEntity, SensorEntity):
     def __init__(self, coordinator: IPv64DataUpdateCoordinator) -> None:
         """Initialize the remaining updates sensor."""
         super().__init__(coordinator, coordinator.data[CONF_DOMAIN])
-        self._attr_name = f"{SHORT_NAME} Remaining Updates"
-        self._attr_unique_id = f"{DOMAIN}_remaining_updates"
+        self._attr_name = f"{SHORT_NAME} {coordinator.data[CONF_DOMAIN]} Remaining Updates"
+        self._attr_unique_id = f"{DOMAIN}_{coordinator.data[CONF_DOMAIN]}_remaining_updates"
 
     @property
     def native_value(self) -> StateType:
@@ -215,37 +203,17 @@ async def async_setup_entry(
     coordinator: IPv64DataUpdateCoordinator = hass.data[DOMAIN][config_entry.entry_id]
     entities: list[SensorEntity] = []
 
-    if coordinator.data.get("owndomains"):
-        entities.append(IPv64SettingSensor(coordinator, "Owner Domains", "owndomains", "owndomain_limit"))
-
-    if coordinator.data.get("healthchecks_updates"):
-        entities.append(
-            IPv64SettingSensor(coordinator, "Healthcheck Counter Today", "healthchecks_updates", "healthcheck_update_limit")
-        )
-
-    if coordinator.data.get("sms_count") is not None:
-        entities.append(IPv64SettingSensor(coordinator, "SMS Counter", "sms_count", "sms_limit"))
-
-    if coordinator.data.get("api_updates") is not None:
-        entities.append(IPv64SettingSensor(coordinator, "API Counter Today", "api_updates", "api_limit"))
-
-    if coordinator.data.get("healthchecks") is not None:
-        entities.append(IPv64SettingSensor(coordinator, "Healthchecks", "healthchecks", "healthcheck_limit"))
-
-    if coordinator.data.get("dyndns_subdomains") is not None:
-        entities.append(IPv64SettingSensor(coordinator, "DynDNS Domains", "dyndns_subdomains", "dyndns_domain_limit"))
+    if not coordinator.data.get("subdomains"):
+        _LOGGER.warning("No subdomains available for %s, skipping domain sensors", config_entry.entry_id)
+    else:
+        for subdomain in coordinator.data["subdomains"]:
+            entities.append(IPv64DomainSensor(coordinator, subdomain))
 
     if coordinator.data.get(CONF_DYNDNS_UPDATES) is not None:
         entities.append(IPv64SettingSensor(coordinator, "DynDNS Counter Today", CONF_DYNDNS_UPDATES, "daily_update_limit"))
 
     if coordinator.data.get(CONF_REMAINING_UPDATES) is not None:
         entities.append(IPv64RemainingUpdatesSensor(coordinator))
-
-    if coordinator.data.get("subdomains"):
-        for subdomain in coordinator.data["subdomains"]:
-            if coordinator.data[CONF_DOMAIN] == subdomain[CONF_DOMAIN]:
-                entities.append(IPv64DomainSensor(coordinator, subdomain))
-                entities.append(IPv64DomainUpdateSensor(coordinator, subdomain))
 
     if coordinator.data.get(CONF_DOMAIN):
         entities.append(IPv64DynDNSStatusSensor(coordinator))
