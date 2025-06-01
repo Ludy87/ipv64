@@ -20,6 +20,7 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 from .config_flow import APIKeyError, get_account_info
 from .const import (
     ALLOWED_DOMAINS,
+    API_URL,
     CHECKIP_URL,
     CONF_API_ECONOMY,
     CONF_API_KEY,
@@ -135,6 +136,120 @@ async def get_domain(session: aiohttp.ClientSession, headers: dict[str, str], da
             await asyncio.sleep(RETRY_DELAY)
 
 
+async def add_domain(hass: HomeAssistant, coordinator: DataUpdateCoordinator, domain: str, api_key: str) -> None:
+    """Add a new domain via the IPv64.net API."""
+    if not any(domain.endswith(allowed_domain) for allowed_domain in ALLOWED_DOMAINS):
+        _LOGGER.error("Domain %s is not one of the allowed domains: %s", domain, ALLOWED_DOMAINS)
+        raise ValueError(f"Domain {domain} not allowed")
+
+    session = async_get_clientsession(hass)
+    headers = {"Authorization": f"Bearer {api_key}"}
+    data = {"add_domain": domain}
+
+    for attempt in range(RETRY_ATTEMPTS):
+        try:
+            async with session.post(API_URL, headers=headers, data=data, timeout=TIMEOUT) as resp:
+                resp.raise_for_status()
+                result = await resp.json()
+                _LOGGER.error("Received result: %s", result)
+                if result.get("info") != "success":
+                    _LOGGER.error("Failed to add domain %s: %s", domain, result.get("add_domain"))
+                    raise UpdateFailed(f"Failed to add domain: {result.get('add_domain')}")
+                _LOGGER.info("Successfully added domain %s", domain)
+                # Trigger coordinator refresh to update domain list
+                await coordinator.async_request_refresh()
+                return
+        except aiohttp.ClientResponseError as error:
+            if attempt == RETRY_ATTEMPTS - 1:
+                _LOGGER.error(
+                    "Failed to add domain %s after %d attempts: %s | Status: %d",
+                    domain,
+                    RETRY_ATTEMPTS,
+                    error.message,
+                    error.status,
+                )
+                if error.status == 401:
+                    raise APIKeyError("Invalid API key") from error
+                elif error.status == 429:
+                    raise UpdateFailed("Rate limit exceeded: Maximum 3 requests per 10 seconds") from error
+                raise UpdateFailed(f"Failed to add domain: {error.message}") from error
+            _LOGGER.warning(
+                "Failed to add domain, retrying (%d/%d): %s",
+                attempt + 1,
+                RETRY_ATTEMPTS,
+                error.message,
+            )
+            await asyncio.sleep(RETRY_DELAY)
+        except (TimeoutError, aiohttp.ClientError) as err:
+            if attempt == RETRY_ATTEMPTS - 1:
+                _LOGGER.error("Failed to add domain %s after %d attempts: %s", domain, RETRY_ATTEMPTS, err)
+                raise UpdateFailed(f"Network error: {err}") from err
+            _LOGGER.warning(
+                "Failed to add domain, retrying (%d/%d): %s",
+                attempt + 1,
+                RETRY_ATTEMPTS,
+                err,
+            )
+            await asyncio.sleep(RETRY_DELAY)
+
+
+async def delete_domain(hass: HomeAssistant, coordinator: DataUpdateCoordinator, domain: str, api_key: str) -> None:
+    """Delete a domain via the IPv64.net API."""
+    if not any(domain.endswith(allowed_domain) for allowed_domain in ALLOWED_DOMAINS):
+        _LOGGER.error("Domain %s is not one of the allowed domains: %s", domain, ALLOWED_DOMAINS)
+        raise ValueError(f"Domain {domain} not allowed")
+
+    session = async_get_clientsession(hass)
+    headers = {"Authorization": f"Bearer {api_key}"}
+    data = {"del_domain": domain}
+
+    for attempt in range(RETRY_ATTEMPTS):
+        try:
+            async with session.delete(API_URL, headers=headers, data=data, timeout=TIMEOUT) as resp:
+                resp.raise_for_status()
+                result = await resp.json()
+                _LOGGER.error("Received result: %s", result)
+                if result.get("info") != "success":
+                    _LOGGER.error("Failed to delete domain %s: %s", domain, result.get("info"))
+                    raise UpdateFailed(f"Failed to delete domain: {result.get('info')}")
+                _LOGGER.info("Successfully deleted domain %s", domain)
+                # Trigger coordinator refresh to update domain list
+                await coordinator.async_request_refresh()
+                return
+        except aiohttp.ClientResponseError as error:
+            if attempt == RETRY_ATTEMPTS - 1:
+                _LOGGER.error(
+                    "Failed to delete domain %s after %d attempts: %s | Status: %d",
+                    domain,
+                    RETRY_ATTEMPTS,
+                    error.message,
+                    error.status,
+                )
+                if error.status == 401:
+                    raise APIKeyError("Invalid API key") from error
+                elif error.status == 429:
+                    raise UpdateFailed("Rate limit exceeded: Maximum 3 requests per 10 seconds") from error
+                raise UpdateFailed(f"Failed to delete domain: {error.message}") from error
+            _LOGGER.warning(
+                "Failed to delete domain, retrying (%d/%d): %s",
+                attempt + 1,
+                RETRY_ATTEMPTS,
+                error.message,
+            )
+            await asyncio.sleep(RETRY_DELAY)
+        except (TimeoutError, aiohttp.ClientError) as err:
+            if attempt == RETRY_ATTEMPTS - 1:
+                _LOGGER.error("Failed to delete domain %s after %d attempts: %s", domain, RETRY_ATTEMPTS, err)
+                raise UpdateFailed(f"Network error: {err}") from err
+            _LOGGER.warning(
+                "Failed to delete domain, retrying (%d/%d): %s",
+                attempt + 1,
+                RETRY_ATTEMPTS,
+                err,
+            )
+            await asyncio.sleep(RETRY_DELAY)
+
+
 class IPv64DataUpdateCoordinator(DataUpdateCoordinator):
     """DataUpdateCoordinator to handle IPv64 data updates with caching."""
 
@@ -238,7 +353,7 @@ class IPv64DataUpdateCoordinator(DataUpdateCoordinator):
         await get_domain(session, headers_api, self.data)
 
         ip_is_changed = False
-        if self.config_entry.options.get(CONF_API_ECONOMY, False) or is_economy:
+        if self.config_entry.options.get(CONF_API_ECONOMY, True) or is_economy:
             ip_is_changed = await self.check_ip_equal(session)
         else:
             ip_is_changed = True

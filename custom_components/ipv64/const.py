@@ -51,22 +51,46 @@ TIMEOUT: Final = 10
 RETRY_ATTEMPTS: Final = 3
 RETRY_DELAY: Final = 2
 UPDATE_URL: Final = "https://ipv64.net/nic/update"
-API_URL: Final = "https://ipv64.net/api.php"  # "http://192.168.0.220:1080/api.php"
+API_URL: Final = "http://192.168.0.220:1080/api.php"  # Lokaler Test
+# API_URL: Final = "https://ipv64.net/api.php"  # Produktion
+
 CHECKIP_URL: Final = "https://checkip.amazonaws.com/"
 
 GET_DOMAIN_URL: Final = f"{API_URL}?get_domains"
 GET_ACCOUNT_INFO_URL: Final = f"{API_URL}?get_account_info"
-# Reserved for future healthcheck feature
 GET_HEALTHCHECKS: Final = f"{API_URL}?get_healthchecks"
 GET_HEALTHCHECK_STATISTICS: Final = f"{API_URL}?get_healthcheck_statistics"
 GET_INTEGRATIONS: Final = f"{API_URL}?get_integrations"
 
 SERVICE_REFRESH: Final = "refresh"
+SERVICE_ADD_DOMAIN: Final = "add_domain"
+SERVICE_DELETE_DOMAIN: Final = "delete_domain"
 
 EXCLUDED_KEYS: Final[list[str]] = [
     "email",
     "account_class",
     "get_account_info",
-    "update_hash",
     "api_key",
+]
+
+ALLOWED_DOMAINS: Final[list[str]] = [
+    "ipv64.net",
+    "ipv64.de",
+    "any64.de",
+    "eth64.de",
+    "home64.de",
+    "iot64.de",
+    "lan64.de",
+    "nas64.de",
+    "srv64.de",
+    "tcp64.de",
+    "udp64.de",
+    "vpn64.de",
+    "wan64.de",
+    "api64.de",
+    "dyndns64.de",
+    "dynipv6.de",
+    "dns64.de",
+    "root64.de",
+    "route64.de",
 ]

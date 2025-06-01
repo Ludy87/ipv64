@@ -48,6 +48,26 @@
         }
       },
       "name": "IP-Adresse aktualisieren"
+    },
+    "add_domain": {
+      "description": "Eine neue Domain über die IPv64.net API erstellen (z. B. test1234.any64.de).",
+      "fields": {
+        "domain": {
+          "description": "Die zu erstellende Domain (muss eine der erlaubten Domains sein: ipv64.net, ipv64.de, any64.de, etc.).",
+          "name": "Domain"
+        }
+      },
+      "name": "Domain hinzufügen"
+    },
+    "delete_domain": {
+      "description": "Eine bestehende Domain über die IPv64.net API löschen (z. B. test1234.any64.de).",
+      "fields": {
+        "domain": {
+          "description": "Die zu löschende Domain (muss eine der erlaubten Domains sein: ipv64.net, ipv64.de, any64.de, etc.).",
+          "name": "Domain"
+        }
+      },
+      "name": "Domain löschen"
     }
   },
   "entity": {
