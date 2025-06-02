@@ -1,5 +1,27 @@
 refresh:
+  name: "IP-Adresse aktualisieren"
+  description: "IP-Adresse manuell aktualisieren. Beachten Sie: Jede Aktualisierung verbraucht 1 von 64 täglichen Tokens."
   fields:
     economy:
+      name: "Economy-Modus"
+      description: "Economy-Modus aktivieren (Updates nur bei IP-Änderung, geprüft via https://checkip.amazonaws.com/)."
       selector:
         boolean:
+add_domain:
+  name: "Domain hinzufügen"
+  description: "Eine neue Domain über die IPv64.net API erstellen (z. B. test1234.any64.de)."
+  fields:
+    domain:
+      name: "Domain"
+      description: "Die zu erstellende Domain (muss eine der erlaubten Domains sein: ipv64.net, ipv64.de, any64.de, etc.)."
+      selector:
+        text:
+delete_domain:
+  name: "Domain löschen"
+  description: "Eine bestehende Domain über die IPv64.net API löschen (z. B. test1234.any64.de)."
+  fields:
+    domain:
+      name: "Domain"
+      description: "Die zu löschende Domain (muss eine der erlaubten Domains sein: ipv64.net, ipv64.de, any64.de, etc.)."
+      selector:
+        text:

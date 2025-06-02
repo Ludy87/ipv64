@@ -1,14 +1,17 @@
-"""Get the version from manifest.json."""
+"""Get the version from manifest.json."""  # noqa: INP001
+
 from __future__ import annotations
 
 import json
+from pathlib import Path
 import sys
 
 
 def main():
-    """Main function to get the version from manifest.json."""  # noqa: D401
-    with open("./custom_components/ipv64/manifest.json", encoding="utf-8") as json_file:
+    """Prints the version from custom_components/ipv64/manifest.json."""
+    with Path("./custom_components/ipv64/manifest.json").open(encoding="utf-8") as json_file:
         data = json.load(json_file)
+        print(data["version"])  # noqa: T201
         print(data["version"])  # noqa: T201
     return 0
 

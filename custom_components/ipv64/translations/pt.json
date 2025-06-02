@@ -1,25 +1,28 @@
 {
   "config": {
     "abort": {
-      "already_configured": "A integração já se encontra configurada",
-      "single_instance_allowed": "Só é permitida uma configuração."
+      "already_configured": "A integração já foi configurada",
+      "single_instance_allowed": "Apenas uma configuração é permitida."
     },
     "error": {
-      "domain_not_found": "Dominio não encontrado",
-      "invalid_api_key": "Chave de API invalida.",
-      "unauthorized": "O teu Token de autenticação falhou."
+      "domain_not_found": "O domínio especificado (por exemplo, ludy1987.ipv64.net ou peter.ludy1987.home64.de) não foi encontrado na sua conta. Verifique a entrada.",
+      "invalid_api_key": "A chave de API fornecida é inválida.",
+      "unauthorized": "O Token de Atualização de Conta é inválido.",
+      "retry_limit_exceeded": "Falha na conexão com IPv64.net após várias tentativas. Verifique sua rede.",
+      "invalid_domain": "O domínio inserido tem um formato inválido ou não é permitido. Domínios permitidos: ipv64.net, ipv64.de, any64.de, eth64.de, home64.de, iot64.de, lan64.de, nas64.de, srv64.de, tcp64.de, udp64.de, vpn64.de, wan64.de, api64.de, dyndns64.de, dynipv6.de, dns64.de, root64.de, route64.de.",
+      "cannot_connect": "Erro de rede: Não foi possível estabelecer conexão com IPv64.net. Verifique sua conexão com a internet."
     },
     "step": {
       "user": {
         "data": {
-          "api_key_economy": "Chave de API (atualizar quando o ip mudar verificar  https://checkip.amazonaws.com/)",
-          "apikey": "chave de API ",
-          "domain": "Dominio",
-          "scan_interval": "Tempo de atualização (0-120 minutos 0=desativado)",
-          "token": "Atualizar o token"
+          "api_key_economy": "Ativar modo econômico (atualiza apenas quando o IP muda, verificado via https://checkip.amazonaws.com/)",
+          "apikey": "Chave de API",
+          "domain": "Domínio",
+          "scan_interval": "Intervalo de atualização (0-120 minutos, 0=desativado)",
+          "token": "Token de Atualização de Conta"
         },
-        "description": "Com IPv64.net pode gerir seus domínios e usar vários recursos, incluindo atualizações DynDNS, suporte a curingas e verificações de integridade. O serviço também oferece uma API quepode usar para aceder aos seus recursos e gerenciar seus domínios.\n\n precisa de um token de atualização de conta e de uma chave de API para aceder a API IPv64.net.pode usar essas informações para gerenciar seus domínios, fazer atualizações e obter mais informações sobre sua conta.",
-        "title": "IPv64.net | Free DynDNS2 "
+        "description": "O IPv64.net oferece serviços DynDNS e de verificação de integridade, permitindo gerenciar domínios e manter dispositivos acessíveis apesar de IPs dinâmicos. Insira sua chave de API e Token de Atualização de Conta para configurar a integração.",
+        "title": "IPv64.net | Serviço Gratuito de DynDNS2 e Healthcheck"
       }
     }
   },
@@ -27,24 +30,51 @@
     "step": {
       "init": {
         "data": {
-          "api_key_economy": "Chave de API (atualizar quando o ip mudar verificar  https://checkip.amazonaws.com/)",
-          "scan_interval": "Tempo de atualização (0-120 minutos 0=desativado)"
+          "api_key_economy": "Ativar modo econômico (atualiza apenas quando o IP muda, verificado via https://checkip.amazonaws.com/)",
+          "scan_interval": "Intervalo de atualização (0-120 minutos, 0=desativado)"
         },
-        "description": "Aviso que depende do numero de ips definidos e o tipo de conta. Com a conta gratuita o limite são  64 pedidos por dia.\n\nA configuração optima é 23 minutos (24:64x60=22.5 minutos)",
-        "title": "Item de atualização"
+        "description": "Configure o intervalo de atualização e o modo econômico. Com uma conta gratuita, você tem 64 atualizações por dia. O intervalo recomendado é de 23 minutos (24 horas ÷ 64 atualizações ≈ 22,5 minutos).",
+        "title": "Configuração do IPv64.net"
       }
     }
   },
   "services": {
     "refresh": {
-      "description": "O ip será atualizado, 1 de 64 tokens irá ser gasto.",
+      "description": "Atualizar manualmente o endereço IP. Nota: Cada atualização consome 1 dos 64 tokens diários.",
       "fields": {
         "economy": {
-          "description": "Chave de API  https://checkip.amazonaws.com/",
-          "name": "Modo economico"
+          "description": "Ativar modo econômico (atualiza apenas quando o IP muda, verificado via https://checkip.amazonaws.com/)",
+          "name": "Modo Econômico"
         }
       },
-      "name": "Atualizar o  IP-Address"
+      "name": "Atualizar Endereço IP"
+    },
+    "add_domain": {
+      "description": "Criar um novo domínio via API do IPv64.net (por exemplo, test1234.any64.de).",
+      "fields": {
+        "domain": {
+          "description": "O domínio a ser criado (deve ser um dos domínios permitidos: ipv64.net, ipv64.de, any64.de, etc.).",
+          "name": "Domínio"
+        }
+      },
+      "name": "Adicionar Domínio"
+    },
+    "delete_domain": {
+      "description": "Excluir um domínio existente via API do IPv64.net (por exemplo, test1234.any64.de).",
+      "fields": {
+        "domain": {
+          "description": "O domínio a ser excluído (deve ser um dos domínios permitidos: ipv64.net, ipv64.de, any64.de, etc.).",
+          "name": "Domínio"
+        }
+      },
+      "name": "Excluir Domínio"
+    }
+  },
+  "entity": {
+    "sensor": {
+      "wildcard": {
+        "name": "Suporte a Wildcard"
+      }
     }
   }
 }
