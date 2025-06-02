@@ -50,8 +50,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: config_entries.ConfigEnt
         _LOGGER.error("Invalid config entry: missing domain for entry %s", entry.entry_id)
         async_create(
             hass,
-            f"IPv64.net: Ungültiger Konfigurationseintrag für ID {entry.entry_id}. Domain fehlt.",
-            title="IPv64.net Konfigurationsfehler",
+            f"IPv64.net: Invalid config entry for ID {entry.entry_id}. Domain is missing.",
+            title="IPv64.net Configuration Error",
             notification_id=f"{DOMAIN}_{entry.entry_id}_config_error",
         )
         return False
@@ -66,8 +66,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: config_entries.ConfigEnt
         _LOGGER.error("Failed to refresh config entry %s: %s", entry.entry_id, err)
         async_create(
             hass,
-            f"IPv64.net: Fehler beim Laden der Konfiguration für {entry.data.get('domain')}: {err}",
-            title="IPv64.net Initialisierungsfehler",
+            f"IPv64.net: Error while loading configuration for {entry.data.get('domain')}: {err}",
+            title="IPv64.net Initialization Error",
             notification_id=f"{DOMAIN}_{entry.entry_id}_init_error",
         )
         return False
@@ -82,8 +82,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: config_entries.ConfigEnt
             _LOGGER.error("Expected exactly one config entry, found %d", len(hass.data[DOMAIN]))
             async_create(
                 hass,
-                f"IPv64.net: Ungültige Anzahl an Config-Einträgen: {len(hass.data[DOMAIN])}. Nur eine Instanz ist erlaubt.",
-                title="IPv64.net Service-Fehler",
+                f"IPv64.net: Invalid number of config entries: {len(hass.data[DOMAIN])}. Only one instance is allowed.",
+                title="IPv64.net Service Error",
                 notification_id=f"{DOMAIN}_service_error",
             )
             return
@@ -98,8 +98,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: config_entries.ConfigEnt
             _LOGGER.error("Expected exactly one config entry, found %d", len(hass.data[DOMAIN]))
             async_create(
                 hass,
-                f"IPv64.net: Ungültige Anzahl an Config-Einträgen: {len(hass.data[DOMAIN])}. Nur eine Instanz ist erlaubt.",
-                title="IPv64.net Service-Fehler",
+                f"IPv64.net: Invalid number of config entries: {len(hass.data[DOMAIN])}. Only one instance is allowed.",
+                title="IPv64.net Service Error",
                 notification_id=f"{DOMAIN}_service_error",
             )
             return
@@ -109,8 +109,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: config_entries.ConfigEnt
             _LOGGER.error("No domain provided for add_domain service")
             async_create(
                 hass,
-                "IPv64.net: Keine Domain für add_domain-Service angegeben.",
-                title="IPv64.net Service-Fehler",
+                "IPv64.net: No domain specified for add_domain service.",
+                title="IPv64.net Service Error",
                 notification_id=f"{DOMAIN}_{entry_id}_add_domain_error",
             )
             return
@@ -120,8 +120,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: config_entries.ConfigEnt
             await add_domain(hass, coordinator, domain, coordinator.config_entry.data.get(CONF_API_KEY))
             async_create(
                 hass,
-                f"IPv64.net: Domain {domain} erfolgreich erstellt.",
-                title="IPv64.net Domain erstellt",
+                f"IPv64.net: Domain {domain} successfully created.",
+                title="IPv64.net Domain Created",
                 notification_id=f"{DOMAIN}_{entry_id}_add_domain_success",
             )
             # Reload integration to recreate sensors with new subdomains
@@ -130,8 +130,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: config_entries.ConfigEnt
             _LOGGER.error("Failed to add domain %s: %s", domain, err)
             async_create(
                 hass,
-                f"IPv64.net: Fehler beim Erstellen der Domain {domain}: {err}",
-                title="IPv64.net Domain-Fehler",
+                f"IPv64.net: Error while creating domain {domain}: {err}",
+                title="IPv64.net Domain Error",
                 notification_id=f"{DOMAIN}_{entry_id}_add_domain_error",
             )
 
@@ -141,8 +141,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: config_entries.ConfigEnt
             _LOGGER.error("Expected exactly one config entry, found %d", len(hass.data[DOMAIN]))
             async_create(
                 hass,
-                f"IPv64.net: Ungültige Anzahl an Config-Einträgen: {len(hass.data[DOMAIN])}. Nur eine Instanz ist erlaubt.",
-                title="IPv64.net Service-Fehler",
+                f"IPv64.net: Invalid number of config entries: {len(hass.data[DOMAIN])}. Only one instance is allowed.",
+                title="IPv64.net Service Error",
                 notification_id=f"{DOMAIN}_service_error",
             )
             return
@@ -152,8 +152,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: config_entries.ConfigEnt
             _LOGGER.error("No domain provided for delete_domain service")
             async_create(
                 hass,
-                "IPv64.net: Keine Domain für delete_domain-Service angegeben.",
-                title="IPv64.net Service-Fehler",
+                "IPv64.net: No domain specified for delete_domain service.",
+                title="IPv64.net Service Error",
                 notification_id=f"{DOMAIN}_{entry_id}_delete_domain_error",
             )
             return
@@ -163,8 +163,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: config_entries.ConfigEnt
             await delete_domain(hass, coordinator, domain, coordinator.config_entry.data.get(CONF_API_KEY))
             async_create(
                 hass,
-                f"IPv64.net: Domain {domain} erfolgreich gelöscht.",
-                title="IPv64.net Domain gelöscht",
+                f"IPv64.net: Domain {domain} successfully deleted.",
+                title="IPv64.net Domain Deleted",
                 notification_id=f"{DOMAIN}_{entry_id}_delete_domain_success",
             )
             # Reload integration to recreate sensors with updated subdomains
@@ -173,8 +173,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: config_entries.ConfigEnt
             _LOGGER.error("Failed to delete domain %s: %s", domain, err)
             async_create(
                 hass,
-                f"IPv64.net: Fehler beim Löschen der Domain {domain}: {err}",
-                title="IPv64.net Domain-Fehler",
+                f"IPv64.net: Error while deleting domain {domain}: {err}",
+                title="IPv64.net Domain Error",
                 notification_id=f"{DOMAIN}_{entry_id}_delete_domain_error",
             )
 

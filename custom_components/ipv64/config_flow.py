@@ -38,7 +38,7 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
-# Regex für gültige Domainnamen (z. B. subdomain.ipv64.net oder prefix.subdomain.home64.de)
+# Regex for valid domain names (e.g., subdomain.ipv64.net or prefix.subdomain.home64.de)
 DOMAIN_REGEX = r"^(?!-)[A-Za-z0-9-]{1,63}(?<!-)(\.[A-Za-z0-9-]{1,63})+$"
 
 
@@ -156,7 +156,7 @@ async def validate_input(hass: core.HomeAssistant, data: dict[str, Any]) -> dict
     # Validate domain format
     if not re.match(DOMAIN_REGEX, data[CONF_DOMAIN]):
         _LOGGER.error("Invalid domain format: %s", data[CONF_DOMAIN])
-        raise InvalidDomain("Ungültiges Domain-Format")
+        raise InvalidDomain("Invalid domain format")
     result = await check_domain_login(hass, data)
     return {"title": f"{DOMAIN} {data[CONF_DOMAIN]}", "data": result}
 
@@ -177,7 +177,7 @@ class IPv64ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
         if user_input is not None:
             try:
-                _LOGGER.error("Received user input: %s", user_input)
+                _LOGGER.debug("Received user input: %s", user_input)
                 info = await validate_input(self.hass, user_input)
                 unique_id = f"{user_input[CONF_DOMAIN]}_{self.hass.data.get(DOMAIN, {}).get('entry_count', 0)}"
                 await self.async_set_unique_id(unique_id)
@@ -213,7 +213,7 @@ class IPv64ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             errors=errors,
             last_step=False,
             description_placeholders={
-                "description": "Geben Sie Ihre IPv64.net-Anmeldedaten ein, um Ihre Domains zu verwalten. API-Schlüssel und Update-Token finden Sie in Ihrem IPv64.net-Konto."
+                "description": "Enter your IPv64.net credentials to manage your domains. API key and update token can be found in your IPv64.net account."
             },
         )
 
@@ -252,6 +252,6 @@ class IPv64OptionsFlowHandler(config_entries.OptionsFlowWithConfigEntry):
             data_schema=data_schema,
             last_step=True,
             description_placeholders={
-                "description": "Konfigurieren Sie das Aktualisierungsintervall und den Economy-Modus für IPv64.net."
+                "description": "Configure the update interval and economy mode for IPv64.net."
             },
         )

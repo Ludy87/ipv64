@@ -301,8 +301,8 @@ class IPv64DataUpdateCoordinator(DataUpdateCoordinator):
                         self.data.update({CONF_DYNDNS_UPDATES: "unavailable", CONF_DAILY_UPDATE_LIMIT: "unavailable"})
                         async_create(
                             self.hass,
-                            f"IPv64.net: Ungültiger API-Schlüssel für {self.config_entry.data.get(CONF_DOMAIN)} nach {RETRY_ATTEMPTS} Versuchen.",
-                            title="IPv64.net API-Fehler",
+                            f"IPv64.net: Invalid API key for {self.config_entry.data.get(CONF_DOMAIN)} after {RETRY_ATTEMPTS} attempts.",
+                            title="IPv64.net API Error",
                             notification_id=f"{DOMAIN}_{self.config_entry.entry_id}_api_error",
                         )
                         raise UpdateFailed(f"Invalid API key: {err}") from err
@@ -313,8 +313,8 @@ class IPv64DataUpdateCoordinator(DataUpdateCoordinator):
                         _LOGGER.error("Failed to fetch account info after %d attempts: %s", RETRY_ATTEMPTS, err)
                         async_create(
                             self.hass,
-                            f"IPv64.net: Netzwerkfehler beim Abrufen von Kontoinformationen für {self.config_entry.data.get(CONF_DOMAIN)}: {err}",
-                            title="IPv64.net Netzwerkfehler",
+                            f"IPv64.net: Network error while fetching account information for {self.config_entry.data.get(CONF_DOMAIN)}: {err}",
+                            title="IPv64.net Network Error",
                             notification_id=f"{DOMAIN}_{self.config_entry.entry_id}_network_error",
                         )
                         raise UpdateFailed(f"Failed to fetch account info: {err}") from err
@@ -327,8 +327,8 @@ class IPv64DataUpdateCoordinator(DataUpdateCoordinator):
             _LOGGER.error("Unexpected error fetching account info: %s", err)
             async_create(
                 self.hass,
-                f"IPv64.net: Unerwarteter Fehler beim Abrufen von Kontoinformationen für {self.config_entry.data.get(CONF_DOMAIN)}: {err}",
-                title="IPv64.net Fehler",
+                f"IPv64.net: Unexpected error while fetching account information for {self.config_entry.data.get(CONF_DOMAIN)}: {err}",
+                title="IPv64.net Error",
                 notification_id=f"{DOMAIN}_{self.config_entry.entry_id}_unexpected_error",
             )
             raise UpdateFailed(f"Unexpected error: {err}") from err
@@ -367,16 +367,16 @@ class IPv64DataUpdateCoordinator(DataUpdateCoordinator):
                             )
                             async_create(
                                 self.hass,
-                                f"IPv64.net: Update-Limit für {self.config_entry.data.get(CONF_DOMAIN)} erreicht. Verbleibende Updates: {self.data.get(CONF_REMAINING_UPDATES, 'unknown')}.",
-                                title="IPv64.net Update-Limit",
+                                f"IPv64.net: Update limit reached for {self.config_entry.data.get(CONF_DOMAIN)}. Remaining updates: {self.data.get(CONF_REMAINING_UPDATES, 'unknown')}.",
+                                title="IPv64.net Update Limit",
                                 notification_id=f"{DOMAIN}_{self.config_entry.entry_id}_limit_error",
                             )
                         elif error.status == 401:
                             _LOGGER.error("Invalid update token for %s", self.config_entry.data.get(CONF_DOMAIN))
                             async_create(
                                 self.hass,
-                                f"IPv64.net: Ungültiger Update-Token für {self.config_entry.data.get(CONF_DOMAIN)}.",
-                                title="IPv64.net Authentifizierungsfehler",
+                                f"IPv64.net: Invalid update token for {self.config_entry.data.get(CONF_DOMAIN)}.",
+                                title="IPv64.net Authentication Error",
                                 notification_id=f"{DOMAIN}_{self.config_entry.entry_id}_auth_error",
                             )
                         else:
@@ -401,8 +401,8 @@ class IPv64DataUpdateCoordinator(DataUpdateCoordinator):
                         )
                         async_create(
                             self.hass,
-                            f"IPv64.net: Netzwerkfehler beim Aktualisieren der IP für {self.config_entry.data.get(CONF_DOMAIN)}: {error}",
-                            title="IPv64.net Netzwerkfehler",
+                            f"IPv64.net: Network error while updating IP for {self.config_entry.data.get(CONF_DOMAIN)}: {error}",
+                            title="IPv64.net Network Error",
                             notification_id=f"{DOMAIN}_{self.config_entry.entry_id}_network_update_error",
                         )
                         raise UpdateFailed(f"Update failed: {error}") from error
@@ -419,8 +419,8 @@ class IPv64DataUpdateCoordinator(DataUpdateCoordinator):
             if updates_used >= updates_limit * 0.9:
                 async_create(
                     self.hass,
-                    f"IPv64.net: {updates_used} von {updates_limit} täglichen Updates für {self.config_entry.data.get(CONF_DOMAIN)} verbraucht. Aktivieren Sie den Economy-Modus, um Updates zu sparen.",
-                    title="IPv64.net Update-Limit-Warnung",
+                    f"IPv64.net: {updates_used} of {updates_limit} daily updates for {self.config_entry.data.get(CONF_DOMAIN)} consumed. Enable economy mode to save updates.",
+                    title="IPv64.net Update Limit Warning",
                     notification_id=f"{DOMAIN}_{self.config_entry.entry_id}_update_limit",
                 )
 
@@ -473,8 +473,8 @@ class IPv64DataUpdateCoordinator(DataUpdateCoordinator):
                     )
                     async_create(
                         self.hass,
-                        f"IPv64.net: Fehler beim Überprüfen der IP-Adresse für {config_domain}: {error}",
-                        title="IPv64.net IP-Prüfungsfehler",
+                        f"IPv64.net: Error while checking IP address for {config_domain}: {error}",
+                        title="IPv64.net IP Check Error",
                         notification_id=f"{DOMAIN}_{self.config_entry.entry_id}_ip_check_error",
                     )
                     return False
@@ -490,8 +490,8 @@ class IPv64DataUpdateCoordinator(DataUpdateCoordinator):
                     )
                     async_create(
                         self.hass,
-                        f"IPv64.net: Netzwerkfehler beim Überprüfen der IP-Adresse für {config_domain}: {error}",
-                        title="IPv64.net IP-Prüfungsfehler",
+                        f"IPv64.net: Network error while checking IP address for {config_domain}: {error}",
+                        title="IPv64.net IP Check Error",
                         notification_id=f"{DOMAIN}_{self.config_entry.entry_id}_ip_check_network_error",
                     )
                     return False

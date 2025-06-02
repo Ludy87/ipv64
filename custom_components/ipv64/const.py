@@ -51,9 +51,9 @@ TIMEOUT: Final = 10
 RETRY_ATTEMPTS: Final = 3
 RETRY_DELAY: Final = 2
 UPDATE_URL: Final = "https://ipv64.net/nic/update"
-# UPDATE_URL: Final = "http://192.168.0.220:1080/update.php"  # Lokaler Test
-# API_URL: Final = "http://192.168.0.220:1080/api.php"  # Lokaler Test
-API_URL: Final = "https://ipv64.net/api.php"  # Produktion
+# UPDATE_URL: Final = "http://192.168.0.220:1080/update.php"  # Local test
+# API_URL: Final = "http://192.168.0.220:1080/api.php"  # Local test
+API_URL: Final = "https://ipv64.net/api.php"  # Production
 
 CHECKIP_URL: Final = "https://checkip.amazonaws.com/"
 
