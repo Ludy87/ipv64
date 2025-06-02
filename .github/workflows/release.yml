@@ -66,49 +66,49 @@ jobs:
         with:
           subject-path: ${{ github.workspace }}/custom_components/ipv64/ipv64.zip
 
-      - name: Debug attestation output
-        if: steps.checkTag.outputs.exists == 'false'
-        run: |
-          echo "Bundle path: ${{ steps.attestation.outputs.bundle-path }}"
-          ls -l "${{ steps.attestation.outputs.bundle-path }}"
-      - name: Copy attestation
-        if: steps.checkTag.outputs.exists == 'false'
-        run: |
-          cp "${{ steps.attestation.outputs.bundle-path }}" ${{ github.workspace }}/custom_components/ipv64/ipv64.zip.intoto.jsonl
+      # - name: Debug attestation output
+      #   if: steps.checkTag.outputs.exists == 'false'
+      #   run: |
+      #     echo "Bundle path: ${{ steps.attestation.outputs.bundle-path }}"
+      #     ls -l "${{ steps.attestation.outputs.bundle-path }}"
+      # - name: Copy attestation
+      #   if: steps.checkTag.outputs.exists == 'false'
+      #   run: |
+      #     cp "${{ steps.attestation.outputs.bundle-path }}" ${{ github.workspace }}/custom_components/ipv64/ipv64.zip.intoto.jsonl
 
-      - name: Import GPG key
-        if: steps.checkTag.outputs.exists == 'false'
-        env:
-          GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
-          PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
-        run: |
-          mkdir -p ~/.gnupg
-          chmod 700 ~/.gnupg
-          echo "$GPG_PRIVATE_KEY" | gpg --batch --import
-          echo "use-agent" > ~/.gnupg/gpg.conf
-          echo "allow-loopback-pinentry" >> ~/.gnupg/gpg.conf
-          gpg --list-keys
+      # - name: Import GPG key
+      #   if: steps.checkTag.outputs.exists == 'false'
+      #   env:
+      #     GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
+      #     PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
+      #   run: |
+      #     mkdir -p ~/.gnupg
+      #     chmod 700 ~/.gnupg
+      #     echo "$GPG_PRIVATE_KEY" | gpg --batch --import
+      #     echo "use-agent" > ~/.gnupg/gpg.conf
+      #     echo "allow-loopback-pinentry" >> ~/.gnupg/gpg.conf
+      #     gpg --list-keys
 
-      - name: Debug Passphrase
-        if: steps.checkTag.outputs.exists == 'false'
-        run: |
-          if [ -z "$PASSPHRASE" ]; then
-            echo "Passphrase is empty!"
-            exit 1
-          else
-            echo "Passphrase is set."
-          fi
-        env:
-          PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
+      # - name: Debug Passphrase
+      #   if: steps.checkTag.outputs.exists == 'false'
+      #   run: |
+      #     if [ -z "$PASSPHRASE" ]; then
+      #       echo "Passphrase is empty!"
+      #       exit 1
+      #     else
+      #       echo "Passphrase is set."
+      #     fi
+      #   env:
+      #     PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
 
-      - name: Sign ZIP file
-        if: steps.checkTag.outputs.exists == 'false'
-        env:
-          PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
-        run: |
-          gpg --detach-sign --batch --yes --pinentry-mode loopback --passphrase "$PASSPHRASE" \
-            -o ${{ github.workspace }}/custom_components/ipv64/ipv64.zip.asc \
-               ${{ github.workspace }}/custom_components/ipv64/ipv64.zip
+      # - name: Sign ZIP file
+      #   if: steps.checkTag.outputs.exists == 'false'
+      #   env:
+      #     PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
+      #   run: |
+      #     gpg --detach-sign --batch --yes --pinentry-mode loopback --passphrase "$PASSPHRASE" \
+      #       -o ${{ github.workspace }}/custom_components/ipv64/ipv64.zip.asc \
+      #          ${{ github.workspace }}/custom_components/ipv64/ipv64.zip
 
       - name: Upload zip to release
         if: steps.checkTag.outputs.exists == 'false'
@@ -120,25 +120,25 @@ jobs:
           tag: ${{ steps.version.outputs.version }}
           overwrite: true
 
-      - name: Upload zip to release
-        if: steps.checkTag.outputs.exists == 'false'
-        uses: svenstaro/upload-release-action@04733e069f2d7f7f0b4aebc4fbdbce8613b03ccd # v2
-        with:
-          repo_token: ${{ secrets.GITHUB_TOKEN }}
-          file: ${{ github.workspace }}/custom_components/ipv64/ipv64.zip.asc
-          asset_name: ipv64.zip.asc
-          tag: ${{ steps.version.outputs.version }}
-          overwrite: true
+      # - name: Upload zip to release
+      #   if: steps.checkTag.outputs.exists == 'false'
+      #   uses: svenstaro/upload-release-action@04733e069f2d7f7f0b4aebc4fbdbce8613b03ccd # v2
+      #   with:
+      #     repo_token: ${{ secrets.GITHUB_TOKEN }}
+      #     file: ${{ github.workspace }}/custom_components/ipv64/ipv64.zip.asc
+      #     asset_name: ipv64.zip.asc
+      #     tag: ${{ steps.version.outputs.version }}
+      #     overwrite: true
 
-      - name: Upload zip to release
-        if: steps.checkTag.outputs.exists == 'false'
-        uses: svenstaro/upload-release-action@04733e069f2d7f7f0b4aebc4fbdbce8613b03ccd # v2
-        with:
-          repo_token: ${{ secrets.GITHUB_TOKEN }}
-          file: ${{ github.workspace }}/custom_components/ipv64/ipv64.zip.intoto.jsonl
-          asset_name: ipv64.zip.intoto.jsonl
-          tag: ${{ steps.version.outputs.version }}
-          overwrite: true
+      # - name: Upload zip to release
+      #   if: steps.checkTag.outputs.exists == 'false'
+      #   uses: svenstaro/upload-release-action@04733e069f2d7f7f0b4aebc4fbdbce8613b03ccd # v2
+      #   with:
+      #     repo_token: ${{ secrets.GITHUB_TOKEN }}
+      #     file: ${{ github.workspace }}/custom_components/ipv64/ipv64.zip.intoto.jsonl
+      #     asset_name: ipv64.zip.intoto.jsonl
+      #     tag: ${{ steps.version.outputs.version }}
+      #     overwrite: true
 
       - name: Create Release
         if: steps.checkTag.outputs.exists == 'false'
