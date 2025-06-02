@@ -73,8 +73,7 @@
   "entity": {
     "sensor": {
       "wildcard": {
-        "name": "Podpora zástupných znakov",
-        "description": "Ukazuje, či má doména aktivovanú podporu zástupných znakov."
+        "name": "Podpora zástupných znakov"
       }
     }
   }

@@ -8,11 +8,14 @@ from homeassistant import config_entries
 from homeassistant.components.persistent_notification import async_create
 from homeassistant.const import CONF_DOMAIN, Platform
 from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.helpers import config_validation as cv
 
 from .const import CONF_API_ECONOMY, CONF_API_KEY, DOMAIN, SERVICE_ADD_DOMAIN, SERVICE_DELETE_DOMAIN, SERVICE_REFRESH
 from .coordinator import IPv64DataUpdateCoordinator, add_domain, delete_domain
 
 PLATFORMS: list[Platform] = [Platform.SENSOR]
+
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 _LOGGER = logging.getLogger(__name__)
 

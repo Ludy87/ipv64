@@ -73,8 +73,7 @@
   "entity": {
     "sensor": {
       "wildcard": {
-        "name": "Suporte a Wildcard",
-        "description": "Indica se o domínio tem suporte a wildcard ativado."
+        "name": "Suporte a Wildcard"
       }
     }
   }
