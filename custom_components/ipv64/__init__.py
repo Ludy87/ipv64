@@ -124,6 +124,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: config_entries.ConfigEnt
                 title="IPv64.net Domain erstellt",
                 notification_id=f"{DOMAIN}_{entry_id}_add_domain_success",
             )
+            # Reload integration to recreate sensors with new subdomains
+            await hass.config_entries.async_reload(entry_id)
         except Exception as err:
             _LOGGER.error("Failed to add domain %s: %s", domain, err)
             async_create(
@@ -165,6 +167,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: config_entries.ConfigEnt
                 title="IPv64.net Domain gelöscht",
                 notification_id=f"{DOMAIN}_{entry_id}_delete_domain_success",
             )
+            # Reload integration to recreate sensors with updated subdomains
+            await hass.config_entries.async_reload(entry_id)
         except Exception as err:
             _LOGGER.error("Failed to delete domain %s: %s", domain, err)
             async_create(
@@ -174,7 +178,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: config_entries.ConfigEnt
                 notification_id=f"{DOMAIN}_{entry_id}_delete_domain_error",
             )
 
-    # Register services with static names
     if not hass.services.has_service(DOMAIN, SERVICE_REFRESH):
         hass.services.async_register(DOMAIN, SERVICE_REFRESH, refresh)
     else:
@@ -204,7 +207,6 @@ async def async_unload_entry(hass: HomeAssistant, entry: config_entries.ConfigEn
     _LOGGER.debug("Unloading IPv64.net config entry %s", entry.entry_id)
     if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
         hass.data[DOMAIN].pop(entry.entry_id)
-        # Remove services since only one instance is allowed
         hass.services.async_remove(DOMAIN, SERVICE_REFRESH)
         hass.services.async_remove(DOMAIN, SERVICE_ADD_DOMAIN)
         hass.services.async_remove(DOMAIN, SERVICE_DELETE_DOMAIN)

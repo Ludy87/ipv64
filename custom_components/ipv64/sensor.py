@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
 import logging
 from typing import Any
 
@@ -11,7 +10,6 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_DOMAIN, CONF_IP_ADDRESS
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -22,7 +20,6 @@ from .const import (
     CONF_REMAINING_UPDATES,
     DOMAIN,
     SHORT_NAME,
-    TRACKER_UPDATE_STR,
 )
 from .coordinator import IPv64DataUpdateCoordinator
 
@@ -33,7 +30,7 @@ class IPv64BaseEntity(CoordinatorEntity[IPv64DataUpdateCoordinator], RestoreSens
     """Base entity class for IPv64."""
 
     _attr_available = False
-    _attr_force_update = False
+    _attr_force_update = True  # Ensure updates are always sent to Home Assistant
 
     def __init__(self, coordinator: IPv64DataUpdateCoordinator, domain: str) -> None:
         """Initialize the IPv64 base entity."""
@@ -46,25 +43,18 @@ class IPv64BaseEntity(CoordinatorEntity[IPv64DataUpdateCoordinator], RestoreSens
             name=f"{SHORT_NAME} {domain}",
             via_device=(SHORT_NAME, domain),
         )
-        self._unsub_dispatchers: list[Callable[[], None]] = []
 
     async def async_added_to_hass(self) -> None:
         """Run when the entity is added to Home Assistant."""
         await super().async_added_to_hass()
         if state := await self.async_get_last_sensor_data():
             self._attr_native_value = state.native_value
-        self._unsub_dispatchers.append(async_dispatcher_connect(self.hass, TRACKER_UPDATE_STR, self.async_update))
+        # Removed TRACKER_UPDATE_STR dispatcher as it's unused
+        self._attr_available = True  # Set available after initialization
 
     async def async_will_remove_from_hass(self) -> None:
         """Clean up before removing the entity."""
-        for unsub in self._unsub_dispatchers[:]:
-            unsub()
-            self._unsub_dispatchers.remove(unsub)
         _LOGGER.debug("Entity %s removed from Home Assistant", self.entity_id)
-
-    async def async_update(self) -> None:
-        """Perform an async update."""
-        _LOGGER.debug("Updating entity %s via coordinator", self.entity_id)
 
 
 class IPv64DynDNSStatusSensor(IPv64BaseEntity, SensorEntity):
@@ -136,34 +126,35 @@ class IPv64DomainSensor(IPv64BaseEntity, SensorEntity):
 
     _attr_icon = "mdi:ip"
 
-    def __init__(self, coordinator: IPv64DataUpdateCoordinator, subdomain: dict[str, Any]) -> None:
+    def __init__(self, coordinator: IPv64DataUpdateCoordinator, domain: str) -> None:
         """Initialize the IPv64 domain sensor."""
-        super().__init__(coordinator, subdomain[CONF_DOMAIN])
-        self._subdomain = subdomain
-        self._attr_name = f"{SHORT_NAME} {subdomain[CONF_DOMAIN]} IP"
-        self._attr_unique_id = f"{DOMAIN}_{subdomain[CONF_DOMAIN]}_ip"
+        super().__init__(coordinator, domain)
+        self._domain = domain
+        self._attr_name = f"{SHORT_NAME} {domain} IP"
+        self._attr_unique_id = f"{DOMAIN}_{domain}_ip"
 
     @property
     def native_value(self) -> StateType:
         """Return the native value of the sensor."""
-        return self._subdomain.get(CONF_IP_ADDRESS, "unknown")
+        for subdomain in self.coordinator.data.get("subdomains", []):
+            if subdomain.get(CONF_DOMAIN) == self._domain:
+                return subdomain.get(CONF_IP_ADDRESS, "unknown")
+        return "unknown"
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the extra state attributes of the sensor."""
         data = super().extra_state_attributes or {}
-        if self.coordinator.data:
-            subdomain_data = {k: v for k, v in self._subdomain.items() if k != "subdomains"}
-            # Add wildcard information if available
-            main_domain = (
-                self._subdomain[CONF_DOMAIN].split(".", 1)[1]
-                if "." in self._subdomain[CONF_DOMAIN]
-                else self._subdomain[CONF_DOMAIN]
-            )
-            metadata = self.coordinator.data.get(f"{main_domain}_metadata", {})
-            if metadata.get("wildcard"):
-                subdomain_data["wildcard"] = metadata["wildcard"]
-            return {**data, **subdomain_data}
+        if not self.coordinator.data:
+            return data
+        for subdomain in self.coordinator.data.get("subdomains", []):
+            if subdomain.get(CONF_DOMAIN) == self._domain:
+                subdomain_data = {k: v for k, v in subdomain.items() if k != "subdomains"}
+                main_domain = self._domain.split(".", 1)[1] if "." in self._domain else self._domain
+                metadata = self.coordinator.data.get(f"{main_domain}_metadata", {})
+                if metadata.get("wildcard"):
+                    subdomain_data["wildcard"] = metadata["wildcard"]
+                return {**data, **subdomain_data}
         return data
 
 
@@ -207,7 +198,7 @@ async def async_setup_entry(
         _LOGGER.warning("No subdomains available for %s, skipping domain sensors", config_entry.entry_id)
     else:
         for subdomain in coordinator.data["subdomains"]:
-            entities.append(IPv64DomainSensor(coordinator, subdomain))
+            entities.append(IPv64DomainSensor(coordinator, subdomain[CONF_DOMAIN]))  # Pass domain string
 
     if coordinator.data.get(CONF_DYNDNS_UPDATES) is not None:
         entities.append(IPv64SettingSensor(coordinator, "DynDNS Counter Today", CONF_DYNDNS_UPDATES, "daily_update_limit"))

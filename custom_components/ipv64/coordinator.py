@@ -64,12 +64,12 @@ async def get_domain(session: aiohttp.ClientSession, headers: dict[str, str], da
                 domain_found = False
                 for subdomain, values in subdomains.items():
                     _LOGGER.debug("Checking subdomain %s against config domain %s", subdomain, config_domain)
-                    # Check if config_domain is the main subdomain or a prefixed subdomain
                     records = values.get("records", [])
                     for record in records:
                         domain_name = subdomain if not record.get("praefix", "") else f'{record["praefix"]}.{subdomain}'
                         if domain_name == config_domain:
                             domain_found = True
+                            data[CONF_IP_ADDRESS] = record["content"]  # Set IP address for config domain
                         sub_domains_list.append(
                             {
                                 CONF_DOMAIN: domain_name,
@@ -83,7 +83,6 @@ async def get_domain(session: aiohttp.ClientSession, headers: dict[str, str], da
                                 "record_key": record["record_key"],
                             }
                         )
-                    # Store subdomain metadata
                     data.update(
                         {
                             f"{subdomain}_metadata": {
@@ -151,12 +150,11 @@ async def add_domain(hass: HomeAssistant, coordinator: DataUpdateCoordinator, do
             async with session.post(API_URL, headers=headers, data=data, timeout=TIMEOUT) as resp:
                 resp.raise_for_status()
                 result = await resp.json()
-                _LOGGER.error("Received result: %s", result)
+                _LOGGER.debug("Received result: %s", result)  # Changed to debug
                 if result.get("info") != "success":
                     _LOGGER.error("Failed to add domain %s: %s", domain, result.get("add_domain"))
                     raise UpdateFailed(f"Failed to add domain: {result.get('add_domain')}")
                 _LOGGER.info("Successfully added domain %s", domain)
-                # Trigger coordinator refresh to update domain list
                 await coordinator.async_request_refresh()
                 return
         except aiohttp.ClientResponseError as error:
@@ -208,12 +206,11 @@ async def delete_domain(hass: HomeAssistant, coordinator: DataUpdateCoordinator,
             async with session.delete(API_URL, headers=headers, data=data, timeout=TIMEOUT) as resp:
                 resp.raise_for_status()
                 result = await resp.json()
-                _LOGGER.error("Received result: %s", result)
+                _LOGGER.debug("Received result: %s", result)  # Changed to debug
                 if result.get("info") != "success":
                     _LOGGER.error("Failed to delete domain %s: %s", domain, result.get("info"))
                     raise UpdateFailed(f"Failed to delete domain: {result.get('info')}")
                 _LOGGER.info("Successfully deleted domain %s", domain)
-                # Trigger coordinator refresh to update domain list
                 await coordinator.async_request_refresh()
                 return
         except aiohttp.ClientResponseError as error:
@@ -285,20 +282,6 @@ class IPv64DataUpdateCoordinator(DataUpdateCoordinator):
         if not isinstance(self.data, dict):
             _LOGGER.warning("self.data was invalid, reinitializing")
             self.data = {CONF_DOMAIN: self.config_entry.data.get(CONF_DOMAIN, "")}
-
-        # Load cached data if not forced to refresh
-        # cached_data = await self._cache.async_load() if not force_refresh else None
-        # if cached_data and not is_economy and not force_refresh:
-        #     cache_time = cached_data.get("cache_time")
-        #     if (
-        #         cache_time
-        #         and datetime.fromisoformat(cache_time) > datetime.now() - timedelta(hours=1)
-        #         and cached_data.get("subdomains") is not None
-        #         and cached_data.get("account") is not None
-        #     ):
-        #         _LOGGER.debug("Utilizing cached data for %s", self.config_entry.data.get(CONF_DOMAIN))
-        #         self.data = cached_data
-        #         return self.data
 
         session = async_get_clientsession(self.hass)
         headers_api = {"Authorization": f"Bearer {self.config_entry.data.get(CONF_API_KEY, '')}"}
@@ -449,60 +432,69 @@ class IPv64DataUpdateCoordinator(DataUpdateCoordinator):
     async def check_ip_equal(self, session: aiohttp.ClientSession) -> bool:
         """Check if the IP has changed."""
         _LOGGER.debug("Checking IP in economy mode for %s", self.config_entry.data.get(CONF_DOMAIN))
+        config_domain = self.config_entry.data.get(CONF_DOMAIN)
+        stored_ip = self.data.get(CONF_IP_ADDRESS, "unknown")
+        if stored_ip == "unknown":
+            _LOGGER.warning("No stored IP found for domain %s, fetching from subdomains", config_domain)
+            for subdomain in self.data.get("subdomains", []):
+                if subdomain.get("domain") == config_domain:
+                    stored_ip = subdomain.get("ip_address", "unknown")
+                    self.data[CONF_IP_ADDRESS] = stored_ip  # Update self.data
+                    break
+            if stored_ip == "unknown":
+                _LOGGER.error("No IP address found for domain %s in subdomains", config_domain)
+                return True  # Trigger update if no stored IP
+
         for attempt in range(RETRY_ATTEMPTS):
             try:
                 async with session.get(CHECKIP_URL, timeout=TIMEOUT) as request:
                     request.raise_for_status()
                     current_ip = (await request.text()).strip()
-                    _LOGGER.error("Current IP for %s: %s", self.config_entry.data.get(CONF_DOMAIN), current_ip)
-                    # Find the stored IP address for the configured domain
-                    stored_ip = "unknown"
-                    for subdomain in self.data.get("subdomains", []):
-                        if subdomain.get("domain") == self.config_entry.data.get(CONF_DOMAIN):
-                            stored_ip = subdomain.get("ip_address", "unknown")
-                            break
-                    _LOGGER.error("Stored IP for %s: %s", self.config_entry.data.get(CONF_DOMAIN), stored_ip)
+                    _LOGGER.debug("Current IP for %s: %s", config_domain, current_ip)
+                    _LOGGER.debug("Stored IP for %s: %s", config_domain, stored_ip)
                     ip_changed = current_ip != stored_ip
                     _LOGGER.debug(
                         "IP comparison for %s: stored=%s, current=%s, changed=%s",
-                        self.config_entry.data.get(CONF_DOMAIN),
+                        config_domain,
                         stored_ip,
                         current_ip,
                         ip_changed,
                     )
+                    if ip_changed:
+                        self.data[CONF_IP_ADDRESS] = current_ip  # Update stored IP
                     return ip_changed
             except (aiohttp.ClientResponseError, aiohttp.ClientConnectionError) as error:
                 if attempt == RETRY_ATTEMPTS - 1:
                     _LOGGER.error(
                         "Failed to check IP for %s after %d attempts: %s",
-                        self.config_entry.data.get(CONF_DOMAIN),
+                        config_domain,
                         RETRY_ATTEMPTS,
                         error,
                     )
                     async_create(
                         self.hass,
-                        f"IPv64.net: Fehler beim Überprüfen der IP-Adresse für {self.config_entry.data.get(CONF_DOMAIN)}: {error}",
+                        f"IPv64.net: Fehler beim Überprüfen der IP-Adresse für {config_domain}: {error}",
                         title="IPv64.net IP-Prüfungsfehler",
                         notification_id=f"{DOMAIN}_{self.config_entry.entry_id}_ip_check_error",
                     )
-                    return False  # Fallback: No update if check fails
+                    return False
                 _LOGGER.warning("IP check failed, retrying (%d/%d): %s", attempt + 1, RETRY_ATTEMPTS, error)
                 await asyncio.sleep(RETRY_DELAY)
             except (TimeoutError, aiohttp.ClientError) as error:
                 if attempt == RETRY_ATTEMPTS - 1:
                     _LOGGER.error(
                         "Failed to check IP for %s after %d attempts: %s",
-                        self.config_entry.data.get(CONF_DOMAIN),
+                        config_domain,
                         RETRY_ATTEMPTS,
                         error,
                     )
                     async_create(
                         self.hass,
-                        f"IPv64.net: Netzwerkfehler beim Überprüfen der IP-Adresse für {self.config_entry.data.get(CONF_DOMAIN)}: {error}",
+                        f"IPv64.net: Netzwerkfehler beim Überprüfen der IP-Adresse für {config_domain}: {error}",
                         title="IPv64.net IP-Prüfungsfehler",
                         notification_id=f"{DOMAIN}_{self.config_entry.entry_id}_ip_check_network_error",
                     )
-                    return False  # Fallback: No update if check fails
+                    return False
                 _LOGGER.warning("IP check failed, retrying (%d/%d): %s", attempt + 1, RETRY_ATTEMPTS, error)
                 await asyncio.sleep(RETRY_DELAY)
-        return False  # Fallback: No update if all attempts fail
+        return False
