@@ -142,7 +142,7 @@ async def check_domain_login(hass: core.HomeAssistant, data: dict[str, Any]) -> 
         _LOGGER.error("API request failed: %s | Status: %d", error.message, error.status)
         if error.status == 401:
             raise APIKeyError("Invalid API key") from error
-        elif error.status == 429:
+        if error.status == 429:
             raise CannotConnect("Rate limit exceeded: Maximum 3 requests per 10 seconds") from error
         raise APIKeyError(f"API error: {error.message}") from error
     except (TimeoutError, aiohttp.ClientError) as error:
@@ -203,8 +203,8 @@ class IPv64ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 errors["base"] = "invalid_api_key"
             except CannotConnect:
                 errors["base"] = "cannot_connect"
-            except Exception as err:
-                _LOGGER.exception("Unexpected error during validation: %s", err)
+            except Exception:
+                _LOGGER.exception("Unexpected error during validation")
                 errors["base"] = "unknown"
 
         return self.async_show_form(
@@ -251,7 +251,5 @@ class IPv64OptionsFlowHandler(config_entries.OptionsFlowWithConfigEntry):
             step_id="init",
             data_schema=data_schema,
             last_step=True,
-            description_placeholders={
-                "description": "Configure the update interval and economy mode for IPv64.net."
-            },
+            description_placeholders={"description": "Configure the update interval and economy mode for IPv64.net."},
         )

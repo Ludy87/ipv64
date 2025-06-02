@@ -82,11 +82,13 @@ To use this integration, you need:
 This integration provides the following services:
 
 - **Refresh IP Address** (`ipv64.refresh`):
+
   - Manually updates the IP address for the configured domain.
   - **Parameter**: `economy` (boolean) – Enable Economy Mode to update only if the IP has changed.
   - **Note**: Each update consumes one of the 64 daily tokens.
 
 - **Add Domain** (`ipv64.add_domain`):
+
   - Creates a new domain via the IPv64.net API (e.g., `test1234.any64.de`).
   - **Parameter**: `domain` (text) – The domain to create, which must be one of the allowed domains (see below).
 

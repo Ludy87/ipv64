@@ -9,14 +9,7 @@ from homeassistant.components.persistent_notification import async_create
 from homeassistant.const import CONF_DOMAIN, Platform
 from homeassistant.core import HomeAssistant, ServiceCall
 
-from .const import (
-    CONF_API_ECONOMY,
-    CONF_API_KEY,
-    DOMAIN,
-    SERVICE_ADD_DOMAIN,
-    SERVICE_DELETE_DOMAIN,
-    SERVICE_REFRESH,
-)
+from .const import CONF_API_ECONOMY, CONF_API_KEY, DOMAIN, SERVICE_ADD_DOMAIN, SERVICE_DELETE_DOMAIN, SERVICE_REFRESH
 from .coordinator import IPv64DataUpdateCoordinator, add_domain, delete_domain
 
 PLATFORMS: list[Platform] = [Platform.SENSOR]
@@ -62,7 +55,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: config_entries.ConfigEnt
     coordinator = IPv64DataUpdateCoordinator(hass, entry)
     try:
         await coordinator.async_config_entry_first_refresh()
-    except Exception as err:
+    except (ValueError, ConnectionError) as err:
         _LOGGER.error("Failed to refresh config entry %s: %s", entry.entry_id, err)
         async_create(
             hass,
@@ -126,11 +119,19 @@ async def async_setup_entry(hass: HomeAssistant, entry: config_entries.ConfigEnt
             )
             # Reload integration to recreate sensors with new subdomains
             await hass.config_entries.async_reload(entry_id)
-        except Exception as err:
+        except ValueError as err:
             _LOGGER.error("Failed to add domain %s: %s", domain, err)
             async_create(
                 hass,
                 f"IPv64.net: Error while creating domain {domain}: {err}",
+                title="IPv64.net Domain Error",
+                notification_id=f"{DOMAIN}_{entry_id}_add_domain_error",
+            )
+        except ConnectionError as err:
+            _LOGGER.error("Connection error while adding domain %s: %s", domain, err)
+            async_create(
+                hass,
+                f"IPv64.net: Connection error while creating domain {domain}: {err}",
                 title="IPv64.net Domain Error",
                 notification_id=f"{DOMAIN}_{entry_id}_add_domain_error",
             )
@@ -169,11 +170,19 @@ async def async_setup_entry(hass: HomeAssistant, entry: config_entries.ConfigEnt
             )
             # Reload integration to recreate sensors with updated subdomains
             await hass.config_entries.async_reload(entry_id)
-        except Exception as err:
+        except ValueError as err:
             _LOGGER.error("Failed to delete domain %s: %s", domain, err)
             async_create(
                 hass,
                 f"IPv64.net: Error while deleting domain {domain}: {err}",
+                title="IPv64.net Domain Error",
+                notification_id=f"{DOMAIN}_{entry_id}_delete_domain_error",
+            )
+        except ConnectionError as err:
+            _LOGGER.error("Connection error while deleting domain %s: %s", domain, err)
+            async_create(
+                hass,
+                f"IPv64.net: Connection error while deleting domain {domain}: {err}",
                 title="IPv64.net Domain Error",
                 notification_id=f"{DOMAIN}_{entry_id}_delete_domain_error",
             )

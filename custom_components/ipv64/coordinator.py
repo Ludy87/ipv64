@@ -66,7 +66,7 @@ async def get_domain(session: aiohttp.ClientSession, headers: dict[str, str], da
                     _LOGGER.debug("Checking subdomain %s against config domain %s", subdomain, config_domain)
                     records = values.get("records", [])
                     for record in records:
-                        domain_name = subdomain if not record.get("praefix", "") else f'{record["praefix"]}.{subdomain}'
+                        domain_name = subdomain if not record.get("praefix", "") else f"{record['praefix']}.{subdomain}"
                         if domain_name == config_domain:
                             domain_found = True
                             data[CONF_IP_ADDRESS] = record["content"]  # Set IP address for config domain
@@ -168,7 +168,7 @@ async def add_domain(hass: HomeAssistant, coordinator: DataUpdateCoordinator, do
                 )
                 if error.status == 401:
                     raise APIKeyError("Invalid API key") from error
-                elif error.status == 429:
+                if error.status == 429:
                     raise UpdateFailed("Rate limit exceeded: Maximum 3 requests per 10 seconds") from error
                 raise UpdateFailed(f"Failed to add domain: {error.message}") from error
             _LOGGER.warning(
@@ -224,7 +224,7 @@ async def delete_domain(hass: HomeAssistant, coordinator: DataUpdateCoordinator,
                 )
                 if error.status == 401:
                     raise APIKeyError("Invalid API key") from error
-                elif error.status == 429:
+                if error.status == 429:
                     raise UpdateFailed("Rate limit exceeded: Maximum 3 requests per 10 seconds") from error
                 raise UpdateFailed(f"Failed to delete domain: {error.message}") from error
             _LOGGER.warning(

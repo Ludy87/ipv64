@@ -14,13 +14,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import (
-    CONF_DAILY_UPDATE_LIMIT,
-    CONF_DYNDNS_UPDATES,
-    CONF_REMAINING_UPDATES,
-    DOMAIN,
-    SHORT_NAME,
-)
+from .const import CONF_DAILY_UPDATE_LIMIT, CONF_DYNDNS_UPDATES, CONF_REMAINING_UPDATES, DOMAIN, SHORT_NAME
 from .coordinator import IPv64DataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
@@ -197,8 +191,9 @@ async def async_setup_entry(
     if not coordinator.data.get("subdomains"):
         _LOGGER.warning("No subdomains available for %s, skipping domain sensors", config_entry.entry_id)
     else:
-        for subdomain in coordinator.data["subdomains"]:
-            entities.append(IPv64DomainSensor(coordinator, subdomain[CONF_DOMAIN]))  # Pass domain string
+        entities.extend(
+            [IPv64DomainSensor(coordinator, subdomain[CONF_DOMAIN]) for subdomain in coordinator.data["subdomains"]]
+        )
 
     if coordinator.data.get(CONF_DYNDNS_UPDATES) is not None:
         entities.append(IPv64SettingSensor(coordinator, "DynDNS Counter Today", CONF_DYNDNS_UPDATES, "daily_update_limit"))
