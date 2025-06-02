@@ -12,7 +12,6 @@ def main():
     with Path("./custom_components/ipv64/manifest.json").open(encoding="utf-8") as json_file:
         data = json.load(json_file)
         print(data["version"])  # noqa: T201
-        print(data["version"])  # noqa: T201
     return 0
 
 
