@@ -87,17 +87,26 @@ async def get_account_info(
         account_result = await resp.json()
         result.update(
             {
-                CONF_DAILY_UPDATE_LIMIT: account_result["account_class"]["dyndns_update_limit"],
-                CONF_DYNDNS_UPDATES: account_result[CONF_DYNDNS_UPDATES],
-                "dyndns_domain_limit": account_result["account_class"]["dyndns_domain_limit"],
-                "api_limit": account_result["account_class"]["api_limit"],
-                "sms_limit": account_result["account_class"]["sms_limit"],
-                "owndomain_limit": account_result["account_class"]["owndomain_limit"],
-                "healthcheck_update_limit": account_result["account_class"]["healthcheck_update_limit"],
-                "healthcheck_limit": account_result["account_class"]["healthcheck_limit"],
-                "sms_count": account_result["sms_count"],
-                "api_updates": account_result["api_updates"],
+                "account_status": account_result["account_status"],
+                "reg_date": account_result["reg_date"],
+                "dyndns_updates": account_result.get(CONF_DYNDNS_UPDATES, 0),
+                "dyndns_subdomains": account_result.get("dyndns_subdomains", 0),
+                "owndomains": account_result.get("owndomains", 0),
+                "healthchecks": account_result.get("healthchecks", 0),
+                "healthchecks_updates": account_result.get("healthchecks_updates", 0),
+                "api_updates": account_result.get("api_updates", 0),
+                "sms_count": account_result.get("sms_count", 0),
                 "account": account_result["account_class"]["class_name"],
+                "dyndns_domain_limit": account_result["account_class"].get("dyndns_domain_limit", 0),
+                CONF_DAILY_UPDATE_LIMIT: account_result["account_class"].get("dyndns_update_limit", 0),
+                "owndomain_limit": account_result["account_class"].get("owndomain_limit", 0),
+                "healthcheck_limit": account_result["account_class"].get("healthcheck_limit", 0),
+                "healthcheck_update_limit": account_result["account_class"].get("healthcheck_update_limit", 0),
+                "dyndns_ttl": account_result["account_class"].get("dyndns_ttl", 0),
+                "api_limit": account_result["account_class"].get("api_limit", 0),
+                "sms_limit": account_result["account_class"].get("sms_limit", 0),
+                "info": account_result.get("info", "unknown"),
+                "status": account_result.get("status", "unknown"),
             }
         )
         for k, v in account_result.items():
@@ -174,6 +183,9 @@ class IPv64ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(self, user_input: dict[str, Any] | None = None) -> FlowResult:
         """Handle the initial user step."""
+        # Only one configuration entry is allowed to prevent conflicting updates
+        if self._async_current_entries():
+            return self.async_abort(reason="single_instance_allowed")
         errors: dict[str, str] = {}
         if user_input is not None:
             try:

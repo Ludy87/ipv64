@@ -5,7 +5,7 @@ from __future__ import annotations
 import logging
 
 from homeassistant import config_entries
-from homeassistant.components.persistent_notification import async_create
+from homeassistant.components.persistent_notification import async_create, async_dismiss
 from homeassistant.const import CONF_DOMAIN, Platform
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers import config_validation as cv
@@ -51,6 +51,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: config_entries.ConfigEnt
             notification_id=f"{DOMAIN}_{entry.entry_id}_config_error",
         )
         return False
+    async_dismiss(
+        hass,
+        notification_id=f"{DOMAIN}_{entry.entry_id}_config_error",
+    )
 
     if not await async_migrate_entry(hass, entry):
         return False
@@ -67,6 +71,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: config_entries.ConfigEnt
             notification_id=f"{DOMAIN}_{entry.entry_id}_init_error",
         )
         return False
+    async_dismiss(
+        hass,
+        notification_id=f"{DOMAIN}_{entry.entry_id}_init_error",
+    )
 
     hass.data[DOMAIN][entry.entry_id] = coordinator
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
@@ -83,6 +91,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: config_entries.ConfigEnt
                 notification_id=f"{DOMAIN}_service_error",
             )
             return
+        async_dismiss(
+            hass,
+            notification_id=f"{DOMAIN}_service_error",
+        )
         entry_id = next(iter(hass.data[DOMAIN]))
         _LOGGER.debug("Service call to refresh IP address for entry %s", entry_id)
         coordinator: IPv64DataUpdateCoordinator = hass.data[DOMAIN][entry_id]
@@ -99,6 +111,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: config_entries.ConfigEnt
                 notification_id=f"{DOMAIN}_service_error",
             )
             return
+        async_dismiss(
+            hass,
+            notification_id=f"{DOMAIN}_service_error",
+        )
         entry_id = next(iter(hass.data[DOMAIN]))
         domain = call.data.get(CONF_DOMAIN)
         if not domain:
@@ -110,6 +126,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: config_entries.ConfigEnt
                 notification_id=f"{DOMAIN}_{entry_id}_add_domain_error",
             )
             return
+        async_dismiss(
+            hass,
+            notification_id=f"{DOMAIN}_{entry_id}_add_domain_error",
+        )
         _LOGGER.debug("Service call to add domain %s for entry %s", domain, entry_id)
         coordinator: IPv64DataUpdateCoordinator = hass.data[DOMAIN][entry_id]
         try:
@@ -122,6 +142,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: config_entries.ConfigEnt
             )
             # Reload integration to recreate sensors with new subdomains
             await hass.config_entries.async_reload(entry_id)
+            async_dismiss(
+                hass,
+                notification_id=f"{DOMAIN}_{entry_id}_add_domain_error",
+            )
         except ValueError as err:
             _LOGGER.error("Failed to add domain %s: %s", domain, err)
             async_create(
@@ -150,6 +174,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: config_entries.ConfigEnt
                 notification_id=f"{DOMAIN}_service_error",
             )
             return
+        async_dismiss(
+            hass,
+            notification_id=f"{DOMAIN}_service_error",
+        )
         entry_id = next(iter(hass.data[DOMAIN]))
         domain = call.data.get(CONF_DOMAIN)
         if not domain:
@@ -161,6 +189,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: config_entries.ConfigEnt
                 notification_id=f"{DOMAIN}_{entry_id}_delete_domain_error",
             )
             return
+        async_dismiss(
+            hass,
+            notification_id=f"{DOMAIN}_{entry_id}_delete_domain_error",
+        )
         _LOGGER.debug("Service call to delete domain %s for entry %s", domain, entry_id)
         coordinator: IPv64DataUpdateCoordinator = hass.data[DOMAIN][entry_id]
         try:
@@ -173,6 +205,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: config_entries.ConfigEnt
             )
             # Reload integration to recreate sensors with updated subdomains
             await hass.config_entries.async_reload(entry_id)
+            async_dismiss(
+                hass,
+                notification_id=f"{DOMAIN}_{entry_id}_delete_domain_error",
+            )
         except ValueError as err:
             _LOGGER.error("Failed to delete domain %s: %s", domain, err)
             async_create(
