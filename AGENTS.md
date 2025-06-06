@@ -11,7 +11,7 @@ This document lists the individuals and entities involved in the development and
 
 ## Contributors
 
-- *None yet*
+- _None yet_
   If you contribute to this project, feel free to add your name here via a pull request!
 
 ## Contact

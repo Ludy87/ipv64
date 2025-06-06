@@ -49,6 +49,7 @@ class IPv64BaseEntity(CoordinatorEntity[IPv64DataUpdateCoordinator], RestoreSens
 
     async def async_will_remove_from_hass(self) -> None:
         """Clean up before removing the entity."""
+        await super().async_will_remove_from_hass()
         _LOGGER.debug("Entity %s removed from Home Assistant", self.entity_id)
 
 
