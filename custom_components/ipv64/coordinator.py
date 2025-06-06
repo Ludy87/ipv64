@@ -148,7 +148,7 @@ async def add_domain(hass: HomeAssistant, coordinator: DataUpdateCoordinator, do
             async with session.post(API_URL, headers=headers, data=data, timeout=TIMEOUT) as resp:
                 resp.raise_for_status()
                 result = await resp.json()
-                _LOGGER.debug("Received result: %s", result)  # Changed to debug
+                _LOGGER.debug("Received result: %s", result)  # log API response
                 if result.get("info") != "success":
                     _LOGGER.error("Failed to add domain %s: %s", domain, result.get("add_domain"))
                     raise UpdateFailed(f"Failed to add domain: {result.get('add_domain')}")
@@ -204,7 +204,7 @@ async def delete_domain(hass: HomeAssistant, coordinator: DataUpdateCoordinator,
             async with session.delete(API_URL, headers=headers, data=data, timeout=TIMEOUT) as resp:
                 resp.raise_for_status()
                 result = await resp.json()
-                _LOGGER.debug("Received result: %s", result)  # Changed to debug
+                _LOGGER.debug("Received result: %s", result)  # log API response
                 if result.get("info") != "success":
                     _LOGGER.error("Failed to delete domain %s: %s", domain, result.get("info"))
                     raise UpdateFailed(f"Failed to delete domain: {result.get('info')}")
