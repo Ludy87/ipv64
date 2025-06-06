@@ -29,8 +29,8 @@ def _redact_metadata(data: dict[str, Any]) -> dict[str, Any]:
     """Recursively redact metadata sections."""
     result: dict[str, Any] = {}
     for key, value in data.items():
-        new_key = "**REDACTED**_metadata" if key.endswith("_metadata") and key != f'{data.get("domain")}_metadata' else key
-        new_key = "**REDACTED_REG_DOMAIN**_metadata" if key == f'{data.get("domain")}_metadata' else new_key
+        new_key = "**REDACTED**_metadata" if key.endswith("_metadata") and key != f"{data.get('domain')}_metadata" else key
+        new_key = "**REDACTED_REG_DOMAIN**_metadata" if key == f"{data.get('domain')}_metadata" else new_key
         if isinstance(value, dict):
             result[new_key] = _redact_metadata(value)
         elif isinstance(value, list):
