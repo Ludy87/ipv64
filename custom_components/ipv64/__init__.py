@@ -62,7 +62,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: config_entries.ConfigEnt
     coordinator = IPv64DataUpdateCoordinator(hass, entry)
     try:
         await coordinator.async_config_entry_first_refresh()
-        entry.runtime_data = coordinator
     except (ValueError, ConnectionError) as err:
         _LOGGER.error("Failed to refresh config entry %s: %s", entry.entry_id, err)
         async_create(
