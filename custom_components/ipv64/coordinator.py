@@ -9,7 +9,7 @@ from typing import Any
 
 import aiohttp
 
-from homeassistant.components.persistent_notification import async_create
+from homeassistant.components.persistent_notification import async_create, async_dismiss
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_DOMAIN, CONF_IP_ADDRESS, CONF_SCAN_INTERVAL, CONF_TOKEN, CONF_TTL, CONF_TYPE
 from homeassistant.core import HomeAssistant, ServiceCall
@@ -79,8 +79,6 @@ async def get_domain(session: aiohttp.ClientSession, headers: dict[str, str], da
                                 "failover_policy": str(record["failover_policy"]),
                                 "deactivated": bool(record["deactivated"]),
                                 "last_update": record["last_update"],
-                                "record_id": record["record_id"],
-                                "record_key": record["record_key"],
                             }
                         )
                     data.update(
@@ -150,7 +148,7 @@ async def add_domain(hass: HomeAssistant, coordinator: DataUpdateCoordinator, do
             async with session.post(API_URL, headers=headers, data=data, timeout=TIMEOUT) as resp:
                 resp.raise_for_status()
                 result = await resp.json()
-                _LOGGER.debug("Received result: %s", result)  # Changed to debug
+                _LOGGER.debug("Received result: %s", result)  # log API response
                 if result.get("info") != "success":
                     _LOGGER.error("Failed to add domain %s: %s", domain, result.get("add_domain"))
                     raise UpdateFailed(f"Failed to add domain: {result.get('add_domain')}")
@@ -206,7 +204,7 @@ async def delete_domain(hass: HomeAssistant, coordinator: DataUpdateCoordinator,
             async with session.delete(API_URL, headers=headers, data=data, timeout=TIMEOUT) as resp:
                 resp.raise_for_status()
                 result = await resp.json()
-                _LOGGER.debug("Received result: %s", result)  # Changed to debug
+                _LOGGER.debug("Received result: %s", result)  # log API response
                 if result.get("info") != "success":
                     _LOGGER.error("Failed to delete domain %s: %s", domain, result.get("info"))
                     raise UpdateFailed(f"Failed to delete domain: {result.get('info')}")
@@ -247,6 +245,9 @@ async def delete_domain(hass: HomeAssistant, coordinator: DataUpdateCoordinator,
             await asyncio.sleep(RETRY_DELAY)
 
 
+type IPv64ConfigEntry = ConfigEntry[IPv64DataUpdateCoordinator]
+
+
 class IPv64DataUpdateCoordinator(DataUpdateCoordinator):
     """DataUpdateCoordinator to handle IPv64 data updates with caching."""
 
@@ -280,7 +281,7 @@ class IPv64DataUpdateCoordinator(DataUpdateCoordinator):
         _LOGGER.debug("Updating data from IPv64.net (economy=%s, force_refresh=%s)", is_economy, force_refresh)
 
         if not isinstance(self.data, dict):
-            _LOGGER.warning("self.data was invalid, reinitializing")
+            _LOGGER.debug("self.data was invalid, reinitializing")
             self.data = {CONF_DOMAIN: self.config_entry.data.get(CONF_DOMAIN, "")}
 
         session = async_get_clientsession(self.hass)
@@ -293,7 +294,16 @@ class IPv64DataUpdateCoordinator(DataUpdateCoordinator):
                     if not isinstance(account_info, dict):
                         _LOGGER.error("Received invalid account_info: %s", account_info)
                         raise UpdateFailed("Received invalid account info")
+                    _LOGGER.debug("Received account info: %s", account_info)
                     self.data.update(account_info)
+                    async_dismiss(
+                        self.hass,
+                        notification_id=f"{DOMAIN}_{self.config_entry.entry_id}_api_error",
+                    )
+                    async_dismiss(
+                        self.hass,
+                        notification_id=f"{DOMAIN}_{self.config_entry.entry_id}_network_error",
+                    )
                     break
                 except APIKeyError as err:
                     if attempt == RETRY_ATTEMPTS - 1:
@@ -320,6 +330,10 @@ class IPv64DataUpdateCoordinator(DataUpdateCoordinator):
                         raise UpdateFailed(f"Failed to fetch account info: {err}") from err
                     _LOGGER.warning("Failed to fetch account info, retrying (%d/%d): %s", attempt + 1, RETRY_ATTEMPTS, err)
                     await asyncio.sleep(RETRY_DELAY)
+            async_dismiss(
+                self.hass,
+                notification_id=f"{DOMAIN}_{self.config_entry.entry_id}_unexpected_error",
+            )
 
         except UpdateFailed:
             raise
@@ -351,10 +365,22 @@ class IPv64DataUpdateCoordinator(DataUpdateCoordinator):
                         timeout=TIMEOUT,
                     ) as resp:
                         resp.raise_for_status()
-                        update_result = await resp.text()
-                        self.data.update({"update_result": update_result})
+                        update_result = await resp.json()
+                        self.data.update({"update_result": update_result.get("status", "unknown")})
                         _LOGGER.info("IP update successful for %s: %s", self.config_entry.data.get(CONF_DOMAIN), update_result)
                         break
+                    async_dismiss(
+                        self.hass,
+                        notification_id=f"{DOMAIN}_{self.config_entry.entry_id}_limit_error",
+                    )
+                    async_dismiss(
+                        self.hass,
+                        notification_id=f"{DOMAIN}_{self.config_entry.entry_id}_auth_error",
+                    )
+                    async_dismiss(
+                        self.hass,
+                        notification_id=f"{DOMAIN}_{self.config_entry.entry_id}_network_update_error",
+                    )
                 except aiohttp.ClientResponseError as error:
                     self.data.update({"update_result": "fail"})
                     if attempt == RETRY_ATTEMPTS - 1:
@@ -423,6 +449,11 @@ class IPv64DataUpdateCoordinator(DataUpdateCoordinator):
                     title="IPv64.net Update Limit Warning",
                     notification_id=f"{DOMAIN}_{self.config_entry.entry_id}_update_limit",
                 )
+            else:
+                async_dismiss(
+                    self.hass,
+                    notification_id=f"{DOMAIN}_{self.config_entry.entry_id}_update_limit",
+                )
 
         self.data["cache_time"] = datetime.now().isoformat()
         await self._cache.async_save(self.data)
@@ -462,6 +493,14 @@ class IPv64DataUpdateCoordinator(DataUpdateCoordinator):
                     )
                     if ip_changed:
                         self.data[CONF_IP_ADDRESS] = current_ip  # Update stored IP
+                    async_dismiss(
+                        self.hass,
+                        notification_id=f"{DOMAIN}_{self.config_entry.entry_id}_ip_check_error",
+                    )
+                    async_dismiss(
+                        self.hass,
+                        notification_id=f"{DOMAIN}_{self.config_entry.entry_id}_ip_check_network_error",
+                    )
                     return ip_changed
             except (aiohttp.ClientResponseError, aiohttp.ClientConnectionError) as error:
                 if attempt == RETRY_ATTEMPTS - 1:
