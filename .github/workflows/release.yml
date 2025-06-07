@@ -1,6 +1,7 @@
 name: Release Version
 
 on:
+  workflow_dispatch:
   push:
     branches: [main]
     # paths-ignore:
@@ -26,26 +27,36 @@ jobs:
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:
           ref: main
+
       - name: Set up Python 3
         uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5.6.0
         with:
           python-version: |
             3.13
-          check-latest: true
-          allow-prereleases: true
+
       - name: Get Version
         id: version
         shell: bash
         run: |
-          version="$(python3 ./.github/actions/get_version.py)"
-          echo "version=$version" >> $GITHUB_OUTPUT
+          echo "version=$(python3 ./.github/actions/get_version.py)" >> $GITHUB_OUTPUT
+
       - name: Is Tag exists
-        uses: mukunku/tag-exists-action@bdad1eaa119ce71b150b952c97351c75025c06a9 # v1.6.0
         id: checkTag
+        uses: actions/github-script@v7.0.1 # v7.0.1
         with:
-          tag: ${{ steps.version.outputs.version }}
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            try {
+              await github.rest.repos.getReleaseByTag({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                tag: `${{ steps.version.outputs.version }}`
+              });
+              core.setOutput("exists","true");
+            } catch (e) {
+              // 404 = Release nicht gefunden, alles andere weiterwerfen
+              core.setOutput("exists", e.status === 404 ? "false" : "error");
+            }
+
       - if: steps.checkTag.outputs.exists == 'false'
         name: Check Tag
         id: check-tag
@@ -53,21 +64,12 @@ jobs:
           if [[ "${{ steps.version.outputs.version }}" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
               echo "match=true" >> $GITHUB_OUTPUT
           fi
+
       - name: ZIP Component Dir
         if: steps.checkTag.outputs.exists == 'false'
         run: |
           cd ${{ github.workspace }}/custom_components/ipv64
           zip -r ipv64.zip ./
-
-      - name: Upload zip to release
-        if: steps.checkTag.outputs.exists == 'false'
-        uses: svenstaro/upload-release-action@04733e069f2d7f7f0b4aebc4fbdbce8613b03ccd # v2
-        with:
-          repo_token: ${{ secrets.GITHUB_TOKEN }}
-          file: ${{ github.workspace }}/custom_components/ipv64/ipv64.zip
-          asset_name: ipv64.zip
-          tag: ${{ steps.version.outputs.version }}
-          overwrite: true
 
       - name: Create Release
         if: steps.checkTag.outputs.exists == 'false'
@@ -79,3 +81,13 @@ jobs:
           prerelease: false
           token: ${{ secrets.GITHUB_TOKEN }}
           generate_release_notes: true
+
+      - name: Upload zip to release
+        if: steps.checkTag.outputs.exists == 'false'
+        uses: svenstaro/upload-release-action@04733e069f2d7f7f0b4aebc4fbdbce8613b03ccd # v2
+        with:
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          file: ${{ github.workspace }}/custom_components/ipv64/ipv64.zip
+          asset_name: ipv64.zip
+          tag: ${{ steps.version.outputs.version }}
+          overwrite: true
