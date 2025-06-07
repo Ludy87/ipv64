@@ -33,7 +33,7 @@
           "api_key_economy": "Economy-Modus aktivieren (Updates nur bei IP-Änderung, geprüft via https://checkip.amazonaws.com/)",
           "scan_interval": "Aktualisierungsintervall (0-120 Minuten, 0=deaktiviert)"
         },
-        "description": "Konfigurieren Sie das Aktualisierungsintervalle und den Economy-Modus. Mit einem kostenlosen Konto stehen Ihnen 64 Updates pro Tag zur Verfügung. Das empfohlene Intervall beträgt 23 Minuten (24 Stunden ÷ 64 Updates ≈ 22,5 Minuten).",
+        "description": "Konfigurieren Sie das Aktualisierungsintervall und den Economy-Modus. Mit einem kostenlosen Konto stehen Ihnen 64 Updates pro Tag zur Verfügung. Das empfohlene Intervall beträgt 23 Minuten (24 Stunden ÷ 64 Updates ≈ 22,5 Minuten).",
         "title": "IPv64.net Konfiguration"
       }
     }
