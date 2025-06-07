@@ -66,3 +66,6 @@
   color: "FDF89E"
 - name: "New Version"
   color: "ff0000"
+- name: "Translation"
+  description: Translation Changes
+  color: "ff0000"
