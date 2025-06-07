@@ -12,21 +12,23 @@ ci:
 
 repos:
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.11.12
+    rev: v0.11.13
     hooks:
-      - id: ruff
+      - id: ruff-check
+        types_or: [python, pyi]
         args:
           - --fix
           - --line-length=127
       - id: ruff-format
-        files: ^((custom_components|tests)/.+)?[^/]+\.py$
+        types_or: [python, pyi]
+        # files: ^((custom_components|tests)/.+)?[^/]+\.py$
   - repo: https://github.com/codespell-project/codespell
     rev: v2.4.1
     hooks:
       - id: codespell
         args:
           - --ignore-words-list=additionals,alle,alot,bund,currenty,datas,farenheit,falsy,fo,haa,hass,iif,incomfort,ines,intoto,ist,nam,nd,praefix,pres,pullrequests,resset,rime,ser,serie,te,technik,ue,unsecure,withing,zar
-          - --skip="./.*,*.csv,*.json,*.ambr"
+          - --skip="./.*,*.csv,*.json,*.ambr",*.yaml
           - --quiet-level=2
         exclude_types: [csv, json]
         additional_dependencies:
@@ -56,7 +58,7 @@ repos:
       - id: python-typing-update
         stages: [manual]
         args:
-          - --py312-plus
+          - --py313-plus
           - --force
           - --keep-updates
         files: ^(custom_components|tests|script)/.+\.py$
