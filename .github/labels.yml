@@ -69,3 +69,6 @@
 - name: "Translation"
   description: Translation Changes
   color: "ff0000"
+- name: "dependencies"
+  description: Dependencies Update
+  color: "ff0000"
