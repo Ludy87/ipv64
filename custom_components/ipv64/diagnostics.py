@@ -52,23 +52,3 @@ async def async_get_config_entry_diagnostics(hass: HomeAssistant, config_entry: 
     }
 
 
-# """Diagnostics platform for IPv64."""
-
-# from __future__ import annotations
-
-# from homeassistant.components.diagnostics import async_redact_data
-# from homeassistant.core import HomeAssistant
-
-# from .coordinator import IPv64DataUpdateCoordinator
-
-# TO_REDACT = {"token", "apikey", "domain", "update_hash", "unique_id", "title", "ip_address"}
-
-
-# async def async_get_config_entry_diagnostics(
-#     hass: HomeAssistant,
-#     config_entry: IPv64DataUpdateCoordinator,
-# ) -> dict[str, any]:
-#     """Return diagnostics for a config entry."""
-#     return {
-#         "data": async_redact_data(config_entry.runtime_data.data, TO_REDACT),
-#     }
