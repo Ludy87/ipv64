@@ -1,0 +1,25 @@
+changelog:
+  categories:
+    - title: Bug Fixes
+      labels:
+        - Bug
+
+    - title: Enhancements
+      labels:
+        - enhancement
+
+    - title: Translation Changes
+      labels:
+        - Translation
+
+    - title: Dependencies
+      labels:
+        - dependencies
+
+    - title: Development Tools
+      labels:
+        - Devtools
+
+    - title: Other Changes
+      labels:
+        - "*"
