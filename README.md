@@ -38,6 +38,7 @@ With this integration, you can:
 To use this integration, you need:
 
 - An [IPv64.net](https://ipv64.net/account?p=fK4RZo) account.
+- Python 3.13 or newer.
 - An **API Key** and **Account Update Token** from your [IPv64.net](https://ipv64.net/account?p=fK4RZo) account.
 - A valid domain registered with IPv64.net (e.g., `yourname.ipv64.net` or `prefix.yourname.home64.de`).
 - Home Assistant installed and running.
