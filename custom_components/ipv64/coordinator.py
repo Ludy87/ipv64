@@ -245,9 +245,6 @@ async def delete_domain(hass: HomeAssistant, coordinator: DataUpdateCoordinator,
             await asyncio.sleep(RETRY_DELAY)
 
 
-type IPv64ConfigEntry = ConfigEntry[IPv64DataUpdateCoordinator]
-
-
 class IPv64DataUpdateCoordinator(DataUpdateCoordinator):
     """DataUpdateCoordinator to handle IPv64 data updates with caching."""
 
