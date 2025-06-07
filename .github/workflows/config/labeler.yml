@@ -13,3 +13,8 @@ wait:
   - all:
       - changed-files:
           - any-glob-to-any-file: "**"
+
+"Translation":
+  - changed-files:
+      - any-glob-to-any-file: "**/translations/**"
+      - any-glob-to-any-file: "custom_components/ipv64/strings.json"
