@@ -84,7 +84,7 @@ jobs:
 
       - name: Upload zip to release
         if: steps.checkTag.outputs.exists == 'false'
-        uses: svenstaro/upload-release-action@04733e069f2d7f7f0b4aebc4fbdbce8613b03ccd # v2
+        uses: svenstaro/upload-release-action@cd8e7cbf67456e30da904d9dd06c146632cb868c # v2
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
           file: ${{ github.workspace }}/custom_components/ipv64/ipv64.zip
