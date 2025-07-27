@@ -7,6 +7,10 @@ on:
     # paths-ignore:
     #   - ".github/**"
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event_name }}-${{ github.ref_name || github.ref }}
+  cancel-in-progress: false
+
 permissions:
   contents: read
 
