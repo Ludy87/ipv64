@@ -16,6 +16,7 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import CONF_DAILY_UPDATE_LIMIT, CONF_DYNDNS_UPDATES, CONF_REMAINING_UPDATES, DOMAIN, SHORT_NAME
 from .coordinator import IPv64DataUpdateCoordinator
+from .models import IPv64RuntimeData
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -236,7 +237,8 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the IPv64 sensors from the config entry."""
-    coordinator: IPv64DataUpdateCoordinator = hass.data[DOMAIN][config_entry.entry_id]
+    runtime_data: IPv64RuntimeData = hass.data[DOMAIN][config_entry.entry_id]
+    coordinator: IPv64DataUpdateCoordinator = runtime_data.coordinator
     entities: list[SensorEntity] = []
 
     if not coordinator.data.get("subdomains"):

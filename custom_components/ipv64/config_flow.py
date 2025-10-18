@@ -22,6 +22,7 @@ from homeassistant.helpers.selector import (
     NumberSelectorMode,
 )
 
+from .api import request_json
 from .const import (
     ALLOWED_DOMAINS,
     CONF_API_ECONOMY,
@@ -33,7 +34,6 @@ from .const import (
     EXCLUDED_KEYS,
     GET_ACCOUNT_INFO_URL,
     GET_DOMAIN_URL,
-    TIMEOUT,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -68,9 +68,13 @@ class InvalidDomain(HomeAssistantError):
 
 async def get_domains(session: aiohttp.ClientSession, headers_api: dict[str, str]) -> dict[str, Any]:
     """Fetches domain information from the IPv64.net API."""
-    async with session.get(GET_DOMAIN_URL, headers=headers_api, timeout=TIMEOUT) as resp:
-        resp.raise_for_status()
-        return await resp.json()
+    return await request_json(
+        session,
+        "GET",
+        GET_DOMAIN_URL,
+        headers=headers_api,
+        log_context="get_domains",
+    )
 
 
 async def get_account_info(
@@ -82,37 +86,41 @@ async def get_account_info(
     """Fetches account information from the IPv64.net API."""
     if result is None:
         result = {}
-    async with session.get(GET_ACCOUNT_INFO_URL, headers=headers_api, timeout=TIMEOUT) as resp:
-        resp.raise_for_status()
-        account_result = await resp.json()
-        result.update(
-            {
-                "account_status": account_result["account_status"],
-                "reg_date": account_result["reg_date"],
-                "dyndns_updates": account_result.get(CONF_DYNDNS_UPDATES, 0),
-                "dyndns_subdomains": account_result.get("dyndns_subdomains", 0),
-                "owndomains": account_result.get("owndomains", 0),
-                "healthchecks": account_result.get("healthchecks", 0),
-                "healthchecks_updates": account_result.get("healthchecks_updates", 0),
-                "api_updates": account_result.get("api_updates", 0),
-                "sms_count": account_result.get("sms_count", 0),
-                "account": account_result["account_class"]["class_name"],
-                "dyndns_domain_limit": account_result["account_class"].get("dyndns_domain_limit", 0),
-                CONF_DAILY_UPDATE_LIMIT: account_result["account_class"].get("dyndns_update_limit", 0),
-                "owndomain_limit": account_result["account_class"].get("owndomain_limit", 0),
-                "healthcheck_limit": account_result["account_class"].get("healthcheck_limit", 0),
-                "healthcheck_update_limit": account_result["account_class"].get("healthcheck_update_limit", 0),
-                "dyndns_ttl": account_result["account_class"].get("dyndns_ttl", 0),
-                "api_limit": account_result["account_class"].get("api_limit", 0),
-                "sms_limit": account_result["account_class"].get("sms_limit", 0),
-                "info": account_result.get("info", "unknown"),
-                "status": account_result.get("status", "unknown"),
-            }
-        )
-        for k, v in account_result.items():
-            if k not in EXCLUDED_KEYS:
-                result.setdefault(k, v)
-        return result
+    account_result = await request_json(
+        session,
+        "GET",
+        GET_ACCOUNT_INFO_URL,
+        headers=headers_api,
+        log_context="get_account_info",
+    )
+    result.update(
+        {
+            "account_status": account_result["account_status"],
+            "reg_date": account_result["reg_date"],
+            "dyndns_updates": account_result.get(CONF_DYNDNS_UPDATES, 0),
+            "dyndns_subdomains": account_result.get("dyndns_subdomains", 0),
+            "owndomains": account_result.get("owndomains", 0),
+            "healthchecks": account_result.get("healthchecks", 0),
+            "healthchecks_updates": account_result.get("healthchecks_updates", 0),
+            "api_updates": account_result.get("api_updates", 0),
+            "sms_count": account_result.get("sms_count", 0),
+            "account": account_result["account_class"]["class_name"],
+            "dyndns_domain_limit": account_result["account_class"].get("dyndns_domain_limit", 0),
+            CONF_DAILY_UPDATE_LIMIT: account_result["account_class"].get("dyndns_update_limit", 0),
+            "owndomain_limit": account_result["account_class"].get("owndomain_limit", 0),
+            "healthcheck_limit": account_result["account_class"].get("healthcheck_limit", 0),
+            "healthcheck_update_limit": account_result["account_class"].get("healthcheck_update_limit", 0),
+            "dyndns_ttl": account_result["account_class"].get("dyndns_ttl", 0),
+            "api_limit": account_result["account_class"].get("api_limit", 0),
+            "sms_limit": account_result["account_class"].get("sms_limit", 0),
+            "info": account_result.get("info", "unknown"),
+            "status": account_result.get("status", "unknown"),
+        }
+    )
+    for k, v in account_result.items():
+        if k not in EXCLUDED_KEYS:
+            result.setdefault(k, v)
+    return result
 
 
 async def check_domain_login(hass: core.HomeAssistant, data: dict[str, Any]) -> dict[str, Any]:

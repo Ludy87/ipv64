@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+from typing import cast
 
 from homeassistant import config_entries
 from homeassistant.components.persistent_notification import async_create, async_dismiss
@@ -11,6 +12,7 @@ from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.service import async_register_admin_service
+from homeassistant.helpers.typing import ConfigType
 
 # from .const import CONF_API_ECONOMY, CONF_API_KEY, DOMAIN, SERVICE_ADD_DOMAIN, SERVICE_DELETE_DOMAIN, SERVICE_REFRESH
 from .const import (
@@ -24,15 +26,16 @@ from .const import (
     SERVICE_REFRESH_SCHEMA,
 )
 from .coordinator import IPv64DataUpdateCoordinator, add_domain, delete_domain
+from .models import IPv64RuntimeData
 
-PLATFORMS: list[Platform] = [Platform.SENSOR]
+PLATFORMS: tuple[Platform, ...] = (Platform.SENSOR,)
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup(hass: HomeAssistant, config: dict) -> bool:
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the IPv64.net component."""
     _LOGGER.debug("Initializing IPv64.net component")
     hass.data.setdefault(DOMAIN, {})
@@ -97,7 +100,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: config_entries.ConfigEnt
         notification_id=f"{DOMAIN}_{entry.entry_id}_init_error",
     )
 
-    hass.data[DOMAIN][entry.entry_id] = coordinator
+    runtime_data = IPv64RuntimeData(coordinator=coordinator)
+    hass.data[DOMAIN][entry.entry_id] = runtime_data
+    entry.runtime_data = runtime_data
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     entry.async_on_unload(entry.add_update_listener(options_update_listener))
 
@@ -118,7 +123,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: config_entries.ConfigEnt
         )
         entry_id = next(iter(hass.data[DOMAIN]))
         _LOGGER.debug("Service call to refresh IP address for entry %s", entry_id)
-        coordinator: IPv64DataUpdateCoordinator = hass.data[DOMAIN][entry_id]
+        config_entry = hass.config_entries.async_get_entry(entry_id)
+        if config_entry is None or config_entry.runtime_data is None:
+            _LOGGER.error("Config entry %s not available for refresh", entry_id)
+            return
+        runtime_data = cast(IPv64RuntimeData, config_entry.runtime_data)
+        coordinator = runtime_data.coordinator
         # await coordinator.async_update(call)
         try:
             await coordinator.async_update(call)
@@ -163,7 +173,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: config_entries.ConfigEnt
             notification_id=f"{DOMAIN}_{entry_id}_add_domain_error",
         )
         _LOGGER.debug("Service call to add domain %s for entry %s", domain, entry_id)
-        coordinator: IPv64DataUpdateCoordinator = hass.data[DOMAIN][entry_id]
+        config_entry = hass.config_entries.async_get_entry(entry_id)
+        if config_entry is None or config_entry.runtime_data is None:
+            _LOGGER.error("Config entry %s not available for add_domain", entry_id)
+            return
+        runtime_data = cast(IPv64RuntimeData, config_entry.runtime_data)
+        coordinator = runtime_data.coordinator
         try:
             await add_domain(hass, coordinator, domain, coordinator.config_entry.data.get(CONF_API_KEY))
             async_create(
@@ -235,7 +250,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: config_entries.ConfigEnt
             notification_id=f"{DOMAIN}_{entry_id}_delete_domain_error",
         )
         _LOGGER.debug("Service call to delete domain %s for entry %s", domain, entry_id)
-        coordinator: IPv64DataUpdateCoordinator = hass.data[DOMAIN][entry_id]
+        config_entry = hass.config_entries.async_get_entry(entry_id)
+        if config_entry is None or config_entry.runtime_data is None:
+            _LOGGER.error("Config entry %s not available for delete_domain", entry_id)
+            return
+        runtime_data = cast(IPv64RuntimeData, config_entry.runtime_data)
+        coordinator = runtime_data.coordinator
         try:
             await delete_domain(hass, coordinator, domain, coordinator.config_entry.data.get(CONF_API_KEY))
             async_create(
@@ -324,8 +344,10 @@ async def async_unload_entry(hass: HomeAssistant, entry: config_entries.ConfigEn
     """Unload a config entry."""
     _LOGGER.debug("Unloading IPv64.net config entry %s", entry.entry_id)
     if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
-        hass.data[DOMAIN].pop(entry.entry_id)
-        hass.services.async_remove(DOMAIN, SERVICE_REFRESH)
-        hass.services.async_remove(DOMAIN, SERVICE_ADD_DOMAIN)
-        hass.services.async_remove(DOMAIN, SERVICE_DELETE_DOMAIN)
+        hass.data[DOMAIN].pop(entry.entry_id, None)
+        if not hass.data[DOMAIN]:
+            hass.data.pop(DOMAIN)
+            hass.services.async_remove(DOMAIN, SERVICE_REFRESH)
+            hass.services.async_remove(DOMAIN, SERVICE_ADD_DOMAIN)
+            hass.services.async_remove(DOMAIN, SERVICE_DELETE_DOMAIN)
     return unload_ok

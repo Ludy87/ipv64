@@ -10,6 +10,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 
 from .const import CONF_API_KEY, CONF_TOKEN, DOMAIN
+from .models import IPv64RuntimeData
 
 TO_REDACT = {
     CONF_API_KEY,
@@ -42,9 +43,9 @@ def _redact_metadata(data: dict[str, Any]) -> dict[str, Any]:
 
 async def async_get_config_entry_diagnostics(hass: HomeAssistant, config_entry: ConfigEntry) -> dict[str, Any]:
     """Return diagnostics for a config entry."""
-    coordinator = hass.data[DOMAIN][config_entry.entry_id]
-    _LOGGER.debug(coordinator.data["domain"])
-    data = _redact_metadata(coordinator.data)
+    runtime_data: IPv64RuntimeData = hass.data[DOMAIN][config_entry.entry_id]
+    _LOGGER.debug(runtime_data.coordinator.data["domain"])
+    data = _redact_metadata(runtime_data.coordinator.data)
 
     return {
         "entry": async_redact_data(config_entry.as_dict(), TO_REDACT),

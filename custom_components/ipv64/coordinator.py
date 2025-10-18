@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import asyncio
 from datetime import datetime, timedelta
 import logging
 from typing import Any
@@ -18,6 +17,7 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.storage import Store
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
+from .api import request_json
 from .config_flow import APIKeyError, get_account_info
 from .const import (
     ALLOWED_DOMAINS,
@@ -30,9 +30,6 @@ from .const import (
     CONF_REMAINING_UPDATES,
     DOMAIN,
     GET_DOMAIN_URL,
-    RETRY_ATTEMPTS,
-    RETRY_DELAY,
-    TIMEOUT,
     UPDATE_URL,
 )
 
@@ -49,89 +46,75 @@ async def get_domain(session: aiohttp.ClientSession, headers: dict[str, str], da
         data["error"] = f"Domain {config_domain} not allowed"
         return
 
-    for attempt in range(RETRY_ATTEMPTS):
-        try:
-            async with session.get(GET_DOMAIN_URL, headers=headers, timeout=TIMEOUT) as resp:
-                resp.raise_for_status()
-                result = await resp.json()
-                subdomains = result.get("subdomains", {})
-                if not subdomains:
-                    _LOGGER.warning("No subdomains found for account")
-                    data["subdomains"] = []
-                    data["error"] = "No subdomains available"
-                    return
+    try:
+        result = await request_json(
+            session,
+            "GET",
+            GET_DOMAIN_URL,
+            headers=headers,
+            log_context="get_domains",
+        )
+    except aiohttp.ClientResponseError as error:
+        _LOGGER.error(
+            "Failed to fetch domains: %s | Status: %d",
+            error.message,
+            error.status,
+        )
+        data["subdomains"] = []
+        data["error"] = "Failed to fetch domains"
+        return
+    except (TimeoutError, aiohttp.ClientError) as err:
+        _LOGGER.error("Failed to fetch domains: %s", err)
+        data["subdomains"] = []
+        data["error"] = str(err)
+        return
 
-                sub_domains_list = []
-                domain_found = False
-                for subdomain, values in subdomains.items():
-                    _LOGGER.debug("Checking subdomain %s against config domain %s", subdomain, config_domain)
-                    records = values.get("records", [])
-                    for record in records:
-                        domain_name = subdomain if not record.get("praefix", "") else f"{record['praefix']}.{subdomain}"
-                        if domain_name == config_domain:
-                            domain_found = True
-                            data[CONF_IP_ADDRESS] = record["content"]  # Set IP address for config domain
-                        sub_domains_list.append(
-                            {
-                                CONF_DOMAIN: domain_name,
-                                CONF_IP_ADDRESS: record["content"],
-                                CONF_TYPE: record["type"],
-                                CONF_TTL: str(record["ttl"]),
-                                "failover_policy": str(record["failover_policy"]),
-                                "deactivated": bool(record["deactivated"]),
-                                "last_update": record["last_update"],
-                            }
-                        )
-                    data.update(
-                        {
-                            f"{subdomain}_metadata": {
-                                "updates": values.get("updates"),
-                                "wildcard": values.get("wildcard"),
-                                "domain_update_hash": values.get("domain_update_hash"),
-                                "ipv6prefix": values.get("ipv6prefix"),
-                                "dualstack": values.get("dualstack"),
-                                "deactivated": values.get("deactivated"),
-                            }
-                        }
-                    )
-                if not domain_found:
-                    _LOGGER.error("Configured domain %s not found in subdomains", config_domain)
-                    data["subdomains"] = []
-                    data["error"] = f"Domain {config_domain} not found"
-                    return
-                data["subdomains"] = sub_domains_list
-                return
-        except aiohttp.ClientResponseError as error:
-            if attempt == RETRY_ATTEMPTS - 1:
-                _LOGGER.error(
-                    "Failed to fetch domains after %d attempts: %s | Status: %d",
-                    RETRY_ATTEMPTS,
-                    error.message,
-                    error.status,
-                )
-                data["subdomains"] = []
-                data["error"] = "Failed to fetch domains"
-                return
-            _LOGGER.warning(
-                "Failed to fetch domains, retrying (%d/%d): %s",
-                attempt + 1,
-                RETRY_ATTEMPTS,
-                error.message,
+    subdomains = result.get("subdomains", {})
+    if not subdomains:
+        _LOGGER.warning("No subdomains found for account")
+        data["subdomains"] = []
+        data["error"] = "No subdomains available"
+        return
+
+    sub_domains_list = []
+    domain_found = False
+    for subdomain, values in subdomains.items():
+        _LOGGER.debug("Checking subdomain %s against config domain %s", subdomain, config_domain)
+        records = values.get("records", [])
+        for record in records:
+            domain_name = subdomain if not record.get("praefix", "") else f"{record['praefix']}.{subdomain}"
+            if domain_name == config_domain:
+                domain_found = True
+                data[CONF_IP_ADDRESS] = record["content"]
+            sub_domains_list.append(
+                {
+                    CONF_DOMAIN: domain_name,
+                    CONF_IP_ADDRESS: record["content"],
+                    CONF_TYPE: record["type"],
+                    CONF_TTL: str(record["ttl"]),
+                    "failover_policy": str(record["failover_policy"]),
+                    "deactivated": bool(record["deactivated"]),
+                    "last_update": record["last_update"],
+                }
             )
-            await asyncio.sleep(RETRY_DELAY)
-        except (TimeoutError, aiohttp.ClientError) as err:
-            if attempt == RETRY_ATTEMPTS - 1:
-                _LOGGER.error("Failed to fetch domains after %d attempts: %s", RETRY_ATTEMPTS, err)
-                data["subdomains"] = []
-                data["error"] = str(err)
-                return
-            _LOGGER.warning(
-                "Failed to fetch domains, retrying (%d/%d): %s",
-                attempt + 1,
-                RETRY_ATTEMPTS,
-                err,
-            )
-            await asyncio.sleep(RETRY_DELAY)
+        data.update(
+            {
+                f"{subdomain}_metadata": {
+                    "updates": values.get("updates"),
+                    "wildcard": values.get("wildcard"),
+                    "domain_update_hash": values.get("domain_update_hash"),
+                    "ipv6prefix": values.get("ipv6prefix"),
+                    "dualstack": values.get("dualstack"),
+                    "deactivated": values.get("deactivated"),
+                }
+            }
+        )
+    if not domain_found:
+        _LOGGER.error("Configured domain %s not found in subdomains", config_domain)
+        data["subdomains"] = []
+        data["error"] = f"Domain {config_domain} not found"
+        return
+    data["subdomains"] = sub_domains_list
 
 
 async def add_domain(hass: HomeAssistant, coordinator: DataUpdateCoordinator, domain: str, api_key: str) -> None:
@@ -141,53 +124,44 @@ async def add_domain(hass: HomeAssistant, coordinator: DataUpdateCoordinator, do
         raise ValueError(f"Domain {domain} not allowed")
 
     session = async_get_clientsession(hass)
-    headers = {"Authorization": f"Bearer {api_key}"}
+    headers = {
+        "Authorization": f"Bearer {api_key}",
+        "Content-Type": "application/x-www-form-urlencoded",
+    }
     data = {"add_domain": domain}
 
-    for attempt in range(RETRY_ATTEMPTS):
-        try:
-            async with session.post(API_URL, headers=headers, data=data, timeout=TIMEOUT) as resp:
-                resp.raise_for_status()
-                result = await resp.json()
-                _LOGGER.debug("Received result: %s", result)  # log API response
-                if result.get("info") != "success":
-                    _LOGGER.error("Failed to add domain %s: %s", domain, result.get("add_domain"))
-                    raise UpdateFailed(f"Failed to add domain: {result.get('add_domain')}")
-                _LOGGER.info("Successfully added domain %s", domain)
-                await coordinator.async_request_refresh()
-                return
-        except aiohttp.ClientResponseError as error:
-            if attempt == RETRY_ATTEMPTS - 1:
-                _LOGGER.error(
-                    "Failed to add domain %s after %d attempts: %s | Status: %d",
-                    domain,
-                    RETRY_ATTEMPTS,
-                    error.message,
-                    error.status,
-                )
-                if error.status == 401:
-                    raise ConfigEntryAuthFailed("Invalid API key") from error
-                if error.status == 429:
-                    raise UpdateFailed("Rate limit exceeded: Maximum 3 requests per 10 seconds") from error
-                raise UpdateFailed(f"Failed to add domain: {error.message}") from error
-            _LOGGER.warning(
-                "Failed to add domain, retrying (%d/%d): %s",
-                attempt + 1,
-                RETRY_ATTEMPTS,
-                error.message,
-            )
-            await asyncio.sleep(RETRY_DELAY)
-        except (TimeoutError, aiohttp.ClientError) as err:
-            if attempt == RETRY_ATTEMPTS - 1:
-                _LOGGER.error("Failed to add domain %s after %d attempts: %s", domain, RETRY_ATTEMPTS, err)
-                raise UpdateFailed(f"Network error: {err}") from err
-            _LOGGER.warning(
-                "Failed to add domain, retrying (%d/%d): %s",
-                attempt + 1,
-                RETRY_ATTEMPTS,
-                err,
-            )
-            await asyncio.sleep(RETRY_DELAY)
+    try:
+        result = await request_json(
+            session,
+            "POST",
+            API_URL,
+            headers=headers,
+            data=data,
+            log_context="add_domain",
+        )
+    except aiohttp.ClientResponseError as error:
+        _LOGGER.error(
+            "Failed to add domain %s: %s | Status: %d",
+            domain,
+            error.message,
+            error.status,
+        )
+        if error.status == 401:
+            raise ConfigEntryAuthFailed("Invalid API key") from error
+        if error.status == 429:
+            raise UpdateFailed("Rate limit exceeded: Maximum 3 requests per 10 seconds") from error
+        raise UpdateFailed(f"Failed to add domain: {error.message}") from error
+    except (TimeoutError, aiohttp.ClientError) as err:
+        _LOGGER.error("Failed to add domain %s: %s", domain, err)
+        raise UpdateFailed(f"Network error: {err}") from err
+
+    _LOGGER.debug("Received result: %s", result)
+    if result.get("info") != "success":
+        _LOGGER.error("Failed to add domain %s: %s", domain, result.get("add_domain"))
+        raise UpdateFailed(f"Failed to add domain: {result.get('add_domain')}")
+
+    _LOGGER.info("Successfully added domain %s", domain)
+    await coordinator.async_request_refresh()
 
 
 async def delete_domain(hass: HomeAssistant, coordinator: DataUpdateCoordinator, domain: str, api_key: str) -> None:
@@ -197,53 +171,44 @@ async def delete_domain(hass: HomeAssistant, coordinator: DataUpdateCoordinator,
         raise ValueError(f"Domain {domain} not allowed")
 
     session = async_get_clientsession(hass)
-    headers = {"Authorization": f"Bearer {api_key}"}
+    headers = {
+        "Authorization": f"Bearer {api_key}",
+        "Content-Type": "application/x-www-form-urlencoded",
+    }
     data = {"del_domain": domain}
 
-    for attempt in range(RETRY_ATTEMPTS):
-        try:
-            async with session.delete(API_URL, headers=headers, data=data, timeout=TIMEOUT) as resp:
-                resp.raise_for_status()
-                result = await resp.json()
-                _LOGGER.debug("Received result: %s", result)  # log API response
-                if result.get("info") != "success":
-                    _LOGGER.error("Failed to delete domain %s: %s", domain, result.get("info"))
-                    raise UpdateFailed(f"Failed to delete domain: {result.get('info')}")
-                _LOGGER.info("Successfully deleted domain %s", domain)
-                await coordinator.async_request_refresh()
-                return
-        except aiohttp.ClientResponseError as error:
-            if attempt == RETRY_ATTEMPTS - 1:
-                _LOGGER.error(
-                    "Failed to delete domain %s after %d attempts: %s | Status: %d",
-                    domain,
-                    RETRY_ATTEMPTS,
-                    error.message,
-                    error.status,
-                )
-                if error.status == 401:
-                    raise ConfigEntryAuthFailed("Invalid API key") from error
-                if error.status == 429:
-                    raise UpdateFailed("Rate limit exceeded: Maximum 3 requests per 10 seconds") from error
-                raise UpdateFailed(f"Failed to delete domain: {error.message}") from error
-            _LOGGER.warning(
-                "Failed to delete domain, retrying (%d/%d): %s",
-                attempt + 1,
-                RETRY_ATTEMPTS,
-                error.message,
-            )
-            await asyncio.sleep(RETRY_DELAY)
-        except (TimeoutError, aiohttp.ClientError) as err:
-            if attempt == RETRY_ATTEMPTS - 1:
-                _LOGGER.error("Failed to delete domain %s after %d attempts: %s", domain, RETRY_ATTEMPTS, err)
-                raise UpdateFailed(f"Network error: {err}") from err
-            _LOGGER.warning(
-                "Failed to delete domain, retrying (%d/%d): %s",
-                attempt + 1,
-                RETRY_ATTEMPTS,
-                err,
-            )
-            await asyncio.sleep(RETRY_DELAY)
+    try:
+        result = await request_json(
+            session,
+            "DELETE",
+            API_URL,
+            headers=headers,
+            data=data,
+            log_context="delete_domain",
+        )
+    except aiohttp.ClientResponseError as error:
+        _LOGGER.error(
+            "Failed to delete domain %s: %s | Status: %d",
+            domain,
+            error.message,
+            error.status,
+        )
+        if error.status == 401:
+            raise ConfigEntryAuthFailed("Invalid API key") from error
+        if error.status == 429:
+            raise UpdateFailed("Rate limit exceeded: Maximum 3 requests per 10 seconds") from error
+        raise UpdateFailed(f"Failed to delete domain: {error.message}") from error
+    except (TimeoutError, aiohttp.ClientError) as err:
+        _LOGGER.error("Failed to delete domain %s: %s", domain, err)
+        raise UpdateFailed(f"Network error: {err}") from err
+
+    _LOGGER.debug("Received result: %s", result)
+    if result.get("info") != "success":
+        _LOGGER.error("Failed to delete domain %s: %s", domain, result.get("info"))
+        raise UpdateFailed(f"Failed to delete domain: {result.get('info')}")
+
+    _LOGGER.info("Successfully deleted domain %s", domain)
+    await coordinator.async_request_refresh()
 
 
 class IPv64DataUpdateCoordinator(DataUpdateCoordinator):
@@ -286,55 +251,62 @@ class IPv64DataUpdateCoordinator(DataUpdateCoordinator):
         headers_api = {"Authorization": f"Bearer {self.config_entry.data.get(CONF_API_KEY, '')}"}
 
         try:
-            for attempt in range(RETRY_ATTEMPTS):
-                try:
-                    account_info = await get_account_info(session, headers_api, self.config_entry.data)
-                    if not isinstance(account_info, dict):
-                        _LOGGER.error("Received invalid account_info: %s", account_info)
-                        raise UpdateFailed("Received invalid account info")
-                    _LOGGER.debug("Received account info: %s", account_info)
-                    self.data.update(account_info)
-                    async_dismiss(
-                        self.hass,
-                        notification_id=f"{DOMAIN}_{self.config_entry.entry_id}_api_error",
-                    )
-                    async_dismiss(
-                        self.hass,
-                        notification_id=f"{DOMAIN}_{self.config_entry.entry_id}_network_error",
-                    )
-                    break
-                except APIKeyError as err:
-                    if attempt == RETRY_ATTEMPTS - 1:
-                        _LOGGER.error("Invalid API key after %d attempts: %s", RETRY_ATTEMPTS, err)
-                        self.data.update({CONF_DYNDNS_UPDATES: "unavailable", CONF_DAILY_UPDATE_LIMIT: "unavailable"})
-                        async_create(
-                            self.hass,
-                            f"IPv64.net: Invalid API key for {self.config_entry.data.get(CONF_DOMAIN)} after {RETRY_ATTEMPTS} attempts.",
-                            title="IPv64.net API Error",
-                            notification_id=f"{DOMAIN}_{self.config_entry.entry_id}_api_error",
-                        )
-                        raise ConfigEntryAuthFailed(f"Invalid API key: {err}") from err
-                    _LOGGER.warning("Invalid API key, retrying (%d/%d)", attempt + 1, RETRY_ATTEMPTS)
-                    await asyncio.sleep(RETRY_DELAY)
-                except (TimeoutError, aiohttp.ClientError) as err:
-                    if attempt == RETRY_ATTEMPTS - 1:
-                        _LOGGER.error("Failed to fetch account info after %d attempts: %s", RETRY_ATTEMPTS, err)
-                        async_create(
-                            self.hass,
-                            f"IPv64.net: Network error while fetching account information for {self.config_entry.data.get(CONF_DOMAIN)}: {err}",
-                            title="IPv64.net Network Error",
-                            notification_id=f"{DOMAIN}_{self.config_entry.entry_id}_network_error",
-                        )
-                        raise UpdateFailed(f"Failed to fetch account info: {err}") from err
-                    _LOGGER.warning("Failed to fetch account info, retrying (%d/%d): %s", attempt + 1, RETRY_ATTEMPTS, err)
-                    await asyncio.sleep(RETRY_DELAY)
+            account_info = await get_account_info(session, headers_api, self.config_entry.data)
+            if not isinstance(account_info, dict):
+                _LOGGER.error("Received invalid account_info: %s", account_info)
+                raise UpdateFailed("Received invalid account info")
+            _LOGGER.debug("Received account info: %s", account_info)
+            self.data.update(account_info)
+            async_dismiss(
+                self.hass,
+                notification_id=f"{DOMAIN}_{self.config_entry.entry_id}_api_error",
+            )
+            async_dismiss(
+                self.hass,
+                notification_id=f"{DOMAIN}_{self.config_entry.entry_id}_network_error",
+            )
             async_dismiss(
                 self.hass,
                 notification_id=f"{DOMAIN}_{self.config_entry.entry_id}_unexpected_error",
             )
 
-        except UpdateFailed:
-            raise
+        except APIKeyError as err:
+            _LOGGER.error("Invalid API key: %s", err)
+            self.data.update({CONF_DYNDNS_UPDATES: "unavailable", CONF_DAILY_UPDATE_LIMIT: "unavailable"})
+            async_create(
+                self.hass,
+                f"IPv64.net: Invalid API key for {self.config_entry.data.get(CONF_DOMAIN)}.",
+                title="IPv64.net API Error",
+                notification_id=f"{DOMAIN}_{self.config_entry.entry_id}_api_error",
+            )
+            raise ConfigEntryAuthFailed(f"Invalid API key: {err}") from err
+        except aiohttp.ClientResponseError as error:
+            if error.status == 401:
+                _LOGGER.error("Authentication failed while fetching account info: %s", error.message)
+                async_create(
+                    self.hass,
+                    f"IPv64.net: Invalid API key for {self.config_entry.data.get(CONF_DOMAIN)}.",
+                    title="IPv64.net API Error",
+                    notification_id=f"{DOMAIN}_{self.config_entry.entry_id}_api_error",
+                )
+                raise ConfigEntryAuthFailed("Invalid API key") from error
+            _LOGGER.error("Failed to fetch account info: %s | Status: %d", error.message, error.status)
+            async_create(
+                self.hass,
+                f"IPv64.net: API error while fetching account information for {self.config_entry.data.get(CONF_DOMAIN)}: {error.message}",
+                title="IPv64.net API Error",
+                notification_id=f"{DOMAIN}_{self.config_entry.entry_id}_api_error",
+            )
+            raise UpdateFailed(f"Failed to fetch account info: {error.message}") from error
+        except (TimeoutError, aiohttp.ClientError) as err:
+            _LOGGER.error("Failed to fetch account info: %s", err)
+            async_create(
+                self.hass,
+                f"IPv64.net: Network error while fetching account information for {self.config_entry.data.get(CONF_DOMAIN)}: {err}",
+                title="IPv64.net Network Error",
+                notification_id=f"{DOMAIN}_{self.config_entry.entry_id}_network_error",
+            )
+            raise UpdateFailed(f"Failed to fetch account info: {err}") from err
         except Exception as err:
             _LOGGER.error("Unexpected error fetching account info: %s", err)
             async_create(
@@ -355,83 +327,82 @@ class IPv64DataUpdateCoordinator(DataUpdateCoordinator):
 
         if ip_is_changed:
             headers_token = {"Authorization": f"Bearer {self.config_entry.data.get(CONF_TOKEN, '')}"}
-            for attempt in range(RETRY_ATTEMPTS):
-                try:
-                    async with session.get(
-                        f"{UPDATE_URL}?domain={self.config_entry.data.get(CONF_DOMAIN, '')}",
-                        headers=headers_token,
-                        timeout=TIMEOUT,
-                    ) as resp:
-                        resp.raise_for_status()
-                        update_result = await resp.json()
-                        self.data.update({"update_result": update_result.get("status", "unknown")})
-                        _LOGGER.info("IP update successful for %s: %s", self.config_entry.data.get(CONF_DOMAIN), update_result)
-                        break
-                    async_dismiss(
+
+            try:
+                update_result = await request_json(
+                    session,
+                    "GET",
+                    UPDATE_URL,
+                    headers=headers_token,
+                    params={"domain": self.config_entry.data.get(CONF_DOMAIN, "")},
+                    log_context="update_domain",
+                )
+            except aiohttp.ClientResponseError as error:
+                self.data.update({"update_result": "fail"})
+                if error.status == 429:
+                    _LOGGER.error(
+                        "Update limit reached for %s: %s of %s used",
+                        self.config_entry.data.get(CONF_DOMAIN),
+                        self.data.get(CONF_DYNDNS_UPDATES, "unknown"),
+                        self.data.get(CONF_DAILY_UPDATE_LIMIT, "unknown"),
+                    )
+                    async_create(
                         self.hass,
+                        f"IPv64.net: Update limit reached for {self.config_entry.data.get(CONF_DOMAIN)}. Remaining updates: {self.data.get(CONF_REMAINING_UPDATES, 'unknown')}.",
+                        title="IPv64.net Update Limit",
                         notification_id=f"{DOMAIN}_{self.config_entry.entry_id}_limit_error",
                     )
-                    async_dismiss(
+                    raise UpdateFailed("Rate limit exceeded") from error
+                if error.status == 401:
+                    _LOGGER.error("Invalid update token for %s", self.config_entry.data.get(CONF_DOMAIN))
+                    async_create(
                         self.hass,
+                        f"IPv64.net: Invalid update token for {self.config_entry.data.get(CONF_DOMAIN)}.",
+                        title="IPv64.net Authentication Error",
                         notification_id=f"{DOMAIN}_{self.config_entry.entry_id}_auth_error",
                     )
-                    async_dismiss(
-                        self.hass,
-                        notification_id=f"{DOMAIN}_{self.config_entry.entry_id}_network_update_error",
-                    )
-                except aiohttp.ClientResponseError as error:
-                    self.data.update({"update_result": "fail"})
-                    if attempt == RETRY_ATTEMPTS - 1:
-                        if error.status == 429:
-                            _LOGGER.error(
-                                "Update limit reached for %s: %s of %s used",
-                                self.config_entry.data.get(CONF_DOMAIN),
-                                self.data.get(CONF_DYNDNS_UPDATES, "unknown"),
-                                self.data.get(CONF_DAILY_UPDATE_LIMIT, "unknown"),
-                            )
-                            async_create(
-                                self.hass,
-                                f"IPv64.net: Update limit reached for {self.config_entry.data.get(CONF_DOMAIN)}. Remaining updates: {self.data.get(CONF_REMAINING_UPDATES, 'unknown')}.",
-                                title="IPv64.net Update Limit",
-                                notification_id=f"{DOMAIN}_{self.config_entry.entry_id}_limit_error",
-                            )
-                        elif error.status == 401:
-                            _LOGGER.error("Invalid update token for %s", self.config_entry.data.get(CONF_DOMAIN))
-                        async_create(
-                            self.hass,
-                            f"IPv64.net: Invalid update token for {self.config_entry.data.get(CONF_DOMAIN)}.",
-                            title="IPv64.net Authentication Error",
-                            notification_id=f"{DOMAIN}_{self.config_entry.entry_id}_auth_error",
-                        )
-                        raise ConfigEntryAuthFailed("Invalid update token") from error
-                    _LOGGER.error(
-                        "Update failed for %s after %d attempts: %s | Status: %d",
-                        self.config_entry.data.get(CONF_DOMAIN),
-                        RETRY_ATTEMPTS,
-                        error.message,
-                        error.status,
-                    )
-                    raise UpdateFailed(f"Update failed after retries: {error}") from error
-                    _LOGGER.warning("Update failed, retrying (%d/%d): %s", attempt + 1, RETRY_ATTEMPTS, error.message)
-                    await asyncio.sleep(RETRY_DELAY)
-                except (TimeoutError, aiohttp.ClientError) as error:
-                    self.data.update({"update_result": "fail"})
-                    if attempt == RETRY_ATTEMPTS - 1:
-                        _LOGGER.error(
-                            "Failed to update IP for %s after %d attempts: %s",
-                            self.config_entry.data.get(CONF_DOMAIN),
-                            RETRY_ATTEMPTS,
-                            error,
-                        )
-                        async_create(
-                            self.hass,
-                            f"IPv64.net: Network error while updating IP for {self.config_entry.data.get(CONF_DOMAIN)}: {error}",
-                            title="IPv64.net Network Error",
-                            notification_id=f"{DOMAIN}_{self.config_entry.entry_id}_network_update_error",
-                        )
-                        raise UpdateFailed(f"Update failed: {error}") from error
-                    _LOGGER.warning("Update failed, retrying (%d/%d): %s", attempt + 1, RETRY_ATTEMPTS, error)
-                    await asyncio.sleep(RETRY_DELAY)
+
+                    raise ConfigEntryAuthFailed("Invalid update token") from error
+                _LOGGER.error(
+                    "Update failed for %s: %s | Status: %d",
+                    self.config_entry.data.get(CONF_DOMAIN),
+                    error.message,
+                    error.status,
+                )
+                raise UpdateFailed(f"Update failed: {error.message}") from error
+            except (TimeoutError, aiohttp.ClientError) as error:
+                self.data.update({"update_result": "fail"})
+                _LOGGER.error(
+                    "Failed to update IP for %s: %s",
+                    self.config_entry.data.get(CONF_DOMAIN),
+                    error,
+                )
+                async_create(
+                    self.hass,
+                    f"IPv64.net: Network error while updating IP for {self.config_entry.data.get(CONF_DOMAIN)}: {error}",
+                    title="IPv64.net Network Error",
+                    notification_id=f"{DOMAIN}_{self.config_entry.entry_id}_network_update_error",
+                )
+                raise UpdateFailed(f"Update failed: {error}") from error
+            else:
+                self.data.update({"update_result": update_result.get("status", "unknown")})
+                _LOGGER.info(
+                    "IP update successful for %s: %s",
+                    self.config_entry.data.get(CONF_DOMAIN),
+                    update_result,
+                )
+                async_dismiss(
+                    self.hass,
+                    notification_id=f"{DOMAIN}_{self.config_entry.entry_id}_limit_error",
+                )
+                async_dismiss(
+                    self.hass,
+                    notification_id=f"{DOMAIN}_{self.config_entry.entry_id}_auth_error",
+                )
+                async_dismiss(
+                    self.hass,
+                    notification_id=f"{DOMAIN}_{self.config_entry.entry_id}_network_update_error",
+                )
         else:
             _LOGGER.debug("IP unchanged for %s, no update needed", self.config_entry.data.get(CONF_DOMAIN))
 
@@ -474,66 +445,61 @@ class IPv64DataUpdateCoordinator(DataUpdateCoordinator):
                 _LOGGER.error("No IP address found for domain %s in subdomains", config_domain)
                 return True  # Trigger update if no stored IP
 
-        for attempt in range(RETRY_ATTEMPTS):
-            try:
-                async with session.get(CHECKIP_URL, timeout=TIMEOUT) as request:
-                    request.raise_for_status()
-                    ip_json = await request.json()
-                    current_ip = ip_json.get("ip", "unknown")
-                    _LOGGER.debug("Current IP for %s: %s", config_domain, current_ip)
-                    _LOGGER.debug("Stored IP for %s: %s", config_domain, stored_ip)
-                    ip_changed = current_ip != stored_ip
-                    _LOGGER.debug(
-                        "IP comparison for %s: stored=%s, current=%s, changed=%s",
-                        config_domain,
-                        stored_ip,
-                        current_ip,
-                        ip_changed,
-                    )
-                    if ip_changed:
-                        self.data[CONF_IP_ADDRESS] = current_ip  # Update stored IP
-                        _LOGGER.info("IP changed for %s: %s -> %s", config_domain, stored_ip, current_ip)
-                    async_dismiss(
-                        self.hass,
-                        notification_id=f"{DOMAIN}_{self.config_entry.entry_id}_ip_check_error",
-                    )
-                    async_dismiss(
-                        self.hass,
-                        notification_id=f"{DOMAIN}_{self.config_entry.entry_id}_ip_check_network_error",
-                    )
-                    return ip_changed
-            except (aiohttp.ClientResponseError, aiohttp.ClientConnectionError) as error:
-                if attempt == RETRY_ATTEMPTS - 1:
-                    _LOGGER.error(
-                        "Failed to check IP for %s after %d attempts: %s",
-                        config_domain,
-                        RETRY_ATTEMPTS,
-                        error,
-                    )
-                    async_create(
-                        self.hass,
-                        f"IPv64.net: Error while checking IP address for {config_domain}: {error}",
-                        title="IPv64.net IP Check Error",
-                        notification_id=f"{DOMAIN}_{self.config_entry.entry_id}_ip_check_error",
-                    )
-                    return False
-                _LOGGER.warning("IP check failed, retrying (%d/%d): %s", attempt + 1, RETRY_ATTEMPTS, error)
-                await asyncio.sleep(RETRY_DELAY)
-            except (TimeoutError, aiohttp.ClientError) as error:
-                if attempt == RETRY_ATTEMPTS - 1:
-                    _LOGGER.error(
-                        "Failed to check IP for %s after %d attempts: %s",
-                        config_domain,
-                        RETRY_ATTEMPTS,
-                        error,
-                    )
-                    async_create(
-                        self.hass,
-                        f"IPv64.net: Network error while checking IP address for {config_domain}: {error}",
-                        title="IPv64.net IP Check Error",
-                        notification_id=f"{DOMAIN}_{self.config_entry.entry_id}_ip_check_network_error",
-                    )
-                    return False
-                _LOGGER.warning("IP check failed, retrying (%d/%d): %s", attempt + 1, RETRY_ATTEMPTS, error)
-                await asyncio.sleep(RETRY_DELAY)
-        return False
+        try:
+            ip_json = await request_json(
+                session,
+                "GET",
+                CHECKIP_URL,
+                log_context="check_ip",
+            )
+        except aiohttp.ClientResponseError as error:
+            _LOGGER.error(
+                "Failed to check IP for %s: %s | Status: %d",
+                config_domain,
+                error.message,
+                error.status,
+            )
+            async_create(
+                self.hass,
+                f"IPv64.net: Error while checking IP address for {config_domain}: {error.message}",
+                title="IPv64.net IP Check Error",
+                notification_id=f"{DOMAIN}_{self.config_entry.entry_id}_ip_check_error",
+            )
+            return False
+        except (TimeoutError, aiohttp.ClientError) as error:
+            _LOGGER.error(
+                "Failed to check IP for %s: %s",
+                config_domain,
+                error,
+            )
+            async_create(
+                self.hass,
+                f"IPv64.net: Network error while checking IP address for {config_domain}: {error}",
+                title="IPv64.net IP Check Error",
+                notification_id=f"{DOMAIN}_{self.config_entry.entry_id}_ip_check_network_error",
+            )
+            return False
+
+        current_ip = ip_json.get("ip", "unknown")
+        _LOGGER.debug("Current IP for %s: %s", config_domain, current_ip)
+        _LOGGER.debug("Stored IP for %s: %s", config_domain, stored_ip)
+        ip_changed = current_ip != stored_ip
+        _LOGGER.debug(
+            "IP comparison for %s: stored=%s, current=%s, changed=%s",
+            config_domain,
+            stored_ip,
+            current_ip,
+            ip_changed,
+        )
+        if ip_changed:
+            self.data[CONF_IP_ADDRESS] = current_ip  # Update stored IP
+            _LOGGER.info("IP changed for %s: %s -> %s", config_domain, stored_ip, current_ip)
+        async_dismiss(
+            self.hass,
+            notification_id=f"{DOMAIN}_{self.config_entry.entry_id}_ip_check_error",
+        )
+        async_dismiss(
+            self.hass,
+            notification_id=f"{DOMAIN}_{self.config_entry.entry_id}_ip_check_network_error",
+        )
+        return ip_changed
