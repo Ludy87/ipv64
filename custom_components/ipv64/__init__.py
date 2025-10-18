@@ -57,6 +57,7 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: config_entries.
 async def async_setup_entry(hass: HomeAssistant, entry: config_entries.ConfigEntry) -> bool:
     """Configure based on config entry."""
     _LOGGER.debug("Configuring IPv64.net for entry %s with domain %s", entry.entry_id, entry.data.get("domain"))
+    hass.data.setdefault(DOMAIN, {})
     if not entry.data.get("domain"):
         _LOGGER.error("Invalid config entry: missing domain for entry %s", entry.entry_id)
         async_create(
