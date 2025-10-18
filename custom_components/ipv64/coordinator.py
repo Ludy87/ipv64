@@ -13,6 +13,7 @@ from homeassistant.components.persistent_notification import async_create, async
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_DOMAIN, CONF_IP_ADDRESS, CONF_SCAN_INTERVAL, CONF_TOKEN, CONF_TTL, CONF_TYPE
 from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.storage import Store
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
@@ -165,7 +166,7 @@ async def add_domain(hass: HomeAssistant, coordinator: DataUpdateCoordinator, do
                     error.status,
                 )
                 if error.status == 401:
-                    raise APIKeyError("Invalid API key") from error
+                    raise ConfigEntryAuthFailed("Invalid API key") from error
                 if error.status == 429:
                     raise UpdateFailed("Rate limit exceeded: Maximum 3 requests per 10 seconds") from error
                 raise UpdateFailed(f"Failed to add domain: {error.message}") from error
@@ -221,7 +222,7 @@ async def delete_domain(hass: HomeAssistant, coordinator: DataUpdateCoordinator,
                     error.status,
                 )
                 if error.status == 401:
-                    raise APIKeyError("Invalid API key") from error
+                    raise ConfigEntryAuthFailed("Invalid API key") from error
                 if error.status == 429:
                     raise UpdateFailed("Rate limit exceeded: Maximum 3 requests per 10 seconds") from error
                 raise UpdateFailed(f"Failed to delete domain: {error.message}") from error
@@ -312,7 +313,7 @@ class IPv64DataUpdateCoordinator(DataUpdateCoordinator):
                             title="IPv64.net API Error",
                             notification_id=f"{DOMAIN}_{self.config_entry.entry_id}_api_error",
                         )
-                        raise UpdateFailed(f"Invalid API key: {err}") from err
+                        raise ConfigEntryAuthFailed(f"Invalid API key: {err}") from err
                     _LOGGER.warning("Invalid API key, retrying (%d/%d)", attempt + 1, RETRY_ATTEMPTS)
                     await asyncio.sleep(RETRY_DELAY)
                 except (TimeoutError, aiohttp.ClientError) as err:
@@ -396,21 +397,21 @@ class IPv64DataUpdateCoordinator(DataUpdateCoordinator):
                             )
                         elif error.status == 401:
                             _LOGGER.error("Invalid update token for %s", self.config_entry.data.get(CONF_DOMAIN))
-                            async_create(
-                                self.hass,
-                                f"IPv64.net: Invalid update token for {self.config_entry.data.get(CONF_DOMAIN)}.",
-                                title="IPv64.net Authentication Error",
-                                notification_id=f"{DOMAIN}_{self.config_entry.entry_id}_auth_error",
-                            )
-                        else:
-                            _LOGGER.error(
-                                "Update failed for %s after %d attempts: %s | Status: %d",
-                                self.config_entry.data.get(CONF_DOMAIN),
-                                RETRY_ATTEMPTS,
-                                error.message,
-                                error.status,
-                            )
-                        raise UpdateFailed(f"Update failed after retries: {error}") from error
+                        async_create(
+                            self.hass,
+                            f"IPv64.net: Invalid update token for {self.config_entry.data.get(CONF_DOMAIN)}.",
+                            title="IPv64.net Authentication Error",
+                            notification_id=f"{DOMAIN}_{self.config_entry.entry_id}_auth_error",
+                        )
+                        raise ConfigEntryAuthFailed("Invalid update token") from error
+                    _LOGGER.error(
+                        "Update failed for %s after %d attempts: %s | Status: %d",
+                        self.config_entry.data.get(CONF_DOMAIN),
+                        RETRY_ATTEMPTS,
+                        error.message,
+                        error.status,
+                    )
+                    raise UpdateFailed(f"Update failed after retries: {error}") from error
                     _LOGGER.warning("Update failed, retrying (%d/%d): %s", attempt + 1, RETRY_ATTEMPTS, error.message)
                     await asyncio.sleep(RETRY_DELAY)
                 except (TimeoutError, aiohttp.ClientError) as error:
@@ -477,7 +478,8 @@ class IPv64DataUpdateCoordinator(DataUpdateCoordinator):
             try:
                 async with session.get(CHECKIP_URL, timeout=TIMEOUT) as request:
                     request.raise_for_status()
-                    current_ip = (await request.text()).strip()
+                    ip_json = await request.json()
+                    current_ip = ip_json.get("ip", "unknown")
                     _LOGGER.debug("Current IP for %s: %s", config_domain, current_ip)
                     _LOGGER.debug("Stored IP for %s: %s", config_domain, stored_ip)
                     ip_changed = current_ip != stored_ip
@@ -490,6 +492,7 @@ class IPv64DataUpdateCoordinator(DataUpdateCoordinator):
                     )
                     if ip_changed:
                         self.data[CONF_IP_ADDRESS] = current_ip  # Update stored IP
+                        _LOGGER.info("IP changed for %s: %s -> %s", config_domain, stored_ip, current_ip)
                     async_dismiss(
                         self.hass,
                         notification_id=f"{DOMAIN}_{self.config_entry.entry_id}_ip_check_error",

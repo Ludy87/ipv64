@@ -50,5 +50,3 @@ async def async_get_config_entry_diagnostics(hass: HomeAssistant, config_entry: 
         "entry": async_redact_data(config_entry.as_dict(), TO_REDACT),
         "data": async_redact_data(data, TO_REDACT),
     }
-
-

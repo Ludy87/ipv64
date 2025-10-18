@@ -8,9 +8,21 @@ from homeassistant import config_entries
 from homeassistant.components.persistent_notification import async_create, async_dismiss
 from homeassistant.const import CONF_DOMAIN, Platform
 from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.service import async_register_admin_service
 
-from .const import CONF_API_ECONOMY, CONF_API_KEY, DOMAIN, SERVICE_ADD_DOMAIN, SERVICE_DELETE_DOMAIN, SERVICE_REFRESH
+# from .const import CONF_API_ECONOMY, CONF_API_KEY, DOMAIN, SERVICE_ADD_DOMAIN, SERVICE_DELETE_DOMAIN, SERVICE_REFRESH
+from .const import (
+    CONF_API_ECONOMY,
+    CONF_API_KEY,
+    DOMAIN,
+    SERVICE_ADD_DOMAIN,
+    SERVICE_DELETE_DOMAIN,
+    SERVICE_DOMAIN_SCHEMA,
+    SERVICE_REFRESH,
+    SERVICE_REFRESH_SCHEMA,
+)
 from .coordinator import IPv64DataUpdateCoordinator, add_domain, delete_domain
 
 PLATFORMS: list[Platform] = [Platform.SENSOR]
@@ -62,6 +74,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: config_entries.ConfigEnt
     coordinator = IPv64DataUpdateCoordinator(hass, entry)
     try:
         await coordinator.async_config_entry_first_refresh()
+    except ConfigEntryAuthFailed as err:
+        _LOGGER.error("Authentication failed for entry %s: %s", entry.entry_id, err)
+        async_create(
+            hass,
+            f"IPv64.net: Authentication error while loading configuration for {entry.data.get('domain')}: {err}",
+            title="IPv64.net Authentication Error",
+            notification_id=f"{DOMAIN}_{entry.entry_id}_auth_error",
+        )
+        raise
     except (ValueError, ConnectionError) as err:
         _LOGGER.error("Failed to refresh config entry %s: %s", entry.entry_id, err)
         async_create(
@@ -98,7 +119,18 @@ async def async_setup_entry(hass: HomeAssistant, entry: config_entries.ConfigEnt
         entry_id = next(iter(hass.data[DOMAIN]))
         _LOGGER.debug("Service call to refresh IP address for entry %s", entry_id)
         coordinator: IPv64DataUpdateCoordinator = hass.data[DOMAIN][entry_id]
-        await coordinator.async_update(call)
+        # await coordinator.async_update(call)
+        try:
+            await coordinator.async_update(call)
+        except ConfigEntryAuthFailed as err:
+            _LOGGER.error("Authentication failed during manual refresh for %s: %s", entry_id, err)
+            async_create(
+                hass,
+                f"IPv64.net: Authentication error while refreshing {coordinator.config_entry.data.get(CONF_DOMAIN)}: {err}",
+                title="IPv64.net Authentication Error",
+                notification_id=f"{DOMAIN}_{entry_id}_manual_refresh_error",
+            )
+            await hass.config_entries.async_start_reauth(coordinator.config_entry)
 
     async def handle_add_domain(call: ServiceCall) -> None:
         """Handle service call to add a domain."""
@@ -146,6 +178,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: config_entries.ConfigEnt
                 hass,
                 notification_id=f"{DOMAIN}_{entry_id}_add_domain_error",
             )
+        except ConfigEntryAuthFailed as err:
+            _LOGGER.error("Authentication failed while adding domain %s: %s", domain, err)
+            async_create(
+                hass,
+                f"IPv64.net: Authentication error while creating domain {domain}: {err}",
+                title="IPv64.net Authentication Error",
+                notification_id=f"{DOMAIN}_{entry_id}_add_domain_error",
+            )
+            await hass.config_entries.async_start_reauth(coordinator.config_entry)
         except ValueError as err:
             _LOGGER.error("Failed to add domain %s: %s", domain, err)
             async_create(
@@ -209,6 +250,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: config_entries.ConfigEnt
                 hass,
                 notification_id=f"{DOMAIN}_{entry_id}_delete_domain_error",
             )
+        except ConfigEntryAuthFailed as err:
+            _LOGGER.error("Authentication failed while deleting domain %s: %s", domain, err)
+            async_create(
+                hass,
+                f"IPv64.net: Authentication error while deleting domain {domain}: {err}",
+                title="IPv64.net Authentication Error",
+                notification_id=f"{DOMAIN}_{entry_id}_delete_domain_error",
+            )
+            await hass.config_entries.async_start_reauth(coordinator.config_entry)
         except ValueError as err:
             _LOGGER.error("Failed to delete domain %s: %s", domain, err)
             async_create(
@@ -227,17 +277,37 @@ async def async_setup_entry(hass: HomeAssistant, entry: config_entries.ConfigEnt
             )
 
     if not hass.services.has_service(DOMAIN, SERVICE_REFRESH):
-        hass.services.async_register(DOMAIN, SERVICE_REFRESH, refresh)
+        # hass.services.async_register(DOMAIN, SERVICE_REFRESH, refresh)
+        hass.services.async_register(
+            DOMAIN,
+            SERVICE_REFRESH,
+            refresh,
+            schema=SERVICE_REFRESH_SCHEMA,
+        )
     else:
         _LOGGER.debug("Service %s already registered", SERVICE_REFRESH)
 
     if not hass.services.has_service(DOMAIN, SERVICE_ADD_DOMAIN):
-        hass.services.async_register(DOMAIN, SERVICE_ADD_DOMAIN, handle_add_domain)
+        # hass.services.async_register(DOMAIN, SERVICE_ADD_DOMAIN, handle_add_domain)
+        async_register_admin_service(
+            hass,
+            DOMAIN,
+            SERVICE_ADD_DOMAIN,
+            handle_add_domain,
+            schema=SERVICE_DOMAIN_SCHEMA,
+        )
     else:
         _LOGGER.debug("Service %s already registered", SERVICE_ADD_DOMAIN)
 
     if not hass.services.has_service(DOMAIN, SERVICE_DELETE_DOMAIN):
-        hass.services.async_register(DOMAIN, SERVICE_DELETE_DOMAIN, handle_delete_domain)
+        # hass.services.async_register(DOMAIN, SERVICE_DELETE_DOMAIN, handle_delete_domain)
+        async_register_admin_service(
+            hass,
+            DOMAIN,
+            SERVICE_DELETE_DOMAIN,
+            handle_delete_domain,
+            schema=SERVICE_DOMAIN_SCHEMA,
+        )
     else:
         _LOGGER.debug("Service %s already registered", SERVICE_DELETE_DOMAIN)
 

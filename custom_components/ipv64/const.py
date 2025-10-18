@@ -6,7 +6,8 @@ from typing import Final
 
 import voluptuous as vol
 
-from homeassistant.const import CONF_DOMAIN, CONF_SCAN_INTERVAL, CONF_TOKEN
+from homeassistant.const import CONF_SCAN_INTERVAL, CONF_TOKEN
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.selector import (
     BooleanSelector,
     BooleanSelectorConfig,
@@ -17,6 +18,9 @@ from homeassistant.helpers.selector import (
     TextSelectorConfig,
     TextSelectorType,
 )
+
+CONF_DOMAIN: Final = "domain"
+CONF_IP_ADDRESS: Final = "ip_address"
 
 CONF_API_KEY: Final = "apikey"
 CONF_API_ECONOMY: Final = "api_key_economy"
@@ -55,7 +59,7 @@ UPDATE_URL: Final = "https://ipv64.net/nic/update"
 # API_URL: Final = "http://192.168.0.220:1080/api.php"  # Local test
 API_URL: Final = "https://ipv64.net/api.php"  # Production
 
-CHECKIP_URL: Final = "https://checkip.amazonaws.com/"
+CHECKIP_URL: Final = "https://ipv4.ipv64.net/update.php?howismyip"
 
 GET_DOMAIN_URL: Final = f"{API_URL}?get_domains"
 GET_ACCOUNT_INFO_URL: Final = f"{API_URL}?get_account_info"
@@ -67,11 +71,17 @@ SERVICE_REFRESH: Final = "refresh"
 SERVICE_ADD_DOMAIN: Final = "add_domain"
 SERVICE_DELETE_DOMAIN: Final = "delete_domain"
 
+SERVICE_REFRESH_SCHEMA: Final = vol.Schema({vol.Optional(CONF_API_ECONOMY, default=False): cv.boolean})
+
+SERVICE_DOMAIN_SCHEMA: Final = vol.Schema({vol.Required(CONF_DOMAIN): cv.string})
+
 EXCLUDED_KEYS: Final[list[str]] = [
     "email",
     "account_class",
     "get_account_info",
     "api_key",
+    "email",
+    "update_hash",
 ]
 
 ALLOWED_DOMAINS: Final[list[str]] = [

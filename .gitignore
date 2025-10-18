@@ -138,3 +138,8 @@ dmypy.json
 package-lock.json
 
 !requirements*.txt
+
+// node_modules
+node_modules/
+*.mjs
+package*.json
