@@ -28,4 +28,6 @@ jobs:
           egress-policy: audit
 
       - uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 # v6.0.0
+        with:
+          persist-credentials: false
       - uses: Ludy87/action/update_hacs_hassio@caa2185f8e7d1ba61c71879e8f150c9df5231035 # v1.0.7
