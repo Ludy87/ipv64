@@ -30,4 +30,4 @@ jobs:
       - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
         with:
           persist-credentials: false
-      - uses: Ludy87/action/update_hacs_hassio@caa2185f8e7d1ba61c71879e8f150c9df5231035 # v1.0.7
+      - uses: Ludy87/action/update_hacs_hassio@a32aa5f016f41dcc9857e7e2e749ac33b9bfc6bd # v1.0.7
