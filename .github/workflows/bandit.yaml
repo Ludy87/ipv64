@@ -24,7 +24,7 @@ jobs:
         with:
           egress-policy: audit
 
-      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
       - name: Bandit Check (Python security linter)
         uses: jpetrucciani/bandit-check@0306d6e0f0ff600eebb8d92731fdce948d8b4c8e # master
         with:
