@@ -15,7 +15,7 @@
     "step": {
       "user": {
         "data": {
-          "api_key_economy": "Povoliť ekonomický režim (aktualizácie iba pri zmene IP, overené cez https://checkip.amazonaws.com/)",
+          "api_key_economy": "Povoliť ekonomický režim (aktualizácie iba pri zmene IP, overené cez externú službu IP)",
           "apikey": "Kľúč API",
           "domain": "Doména",
           "scan_interval": "Interval aktualizácie (0–120 minút, 0=vypnuté)",
@@ -30,7 +30,7 @@
     "step": {
       "init": {
         "data": {
-          "api_key_economy": "Povoliť ekonomický režim (aktualizácie iba pri zmene IP, overené cez https://checkip.amazonaws.com/)",
+          "api_key_economy": "Povoliť ekonomický režim (aktualizácie iba pri zmene IP, overené cez externú službu IP)",
           "scan_interval": "Interval aktualizácie (0–120 minút, 0=vypnuté)"
         },
         "description": "Nakonfigurujte interval aktualizácie a ekonomický režim. S bezplatným účtom máte k dispozícii 64 aktualizácií denne. Odporúčaný interval je 23 minút (24 hodín ÷ 64 aktualizácií ≈ 22,5 minúty).",
@@ -43,7 +43,7 @@
       "description": "Manuálne aktualizovať IP adresu. Poznámka: Každá aktualizácia spotrebuje 1 zo 64 denných tokenov.",
       "fields": {
         "economy": {
-          "description": "Povoliť ekonomický režim (aktualizácie iba pri zmene IP, overené cez https://checkip.amazonaws.com/)",
+          "description": "Povoliť ekonomický režim (aktualizácie iba pri zmene IP, overené cez externú službu IP)",
           "name": "Ekonomický režim"
         }
       },

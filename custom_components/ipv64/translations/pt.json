@@ -15,7 +15,7 @@
     "step": {
       "user": {
         "data": {
-          "api_key_economy": "Ativar modo econômico (atualiza apenas quando o IP muda, verificado via https://checkip.amazonaws.com/)",
+          "api_key_economy": "Ativar modo econômico (atualiza apenas quando o IP muda, verificado por um serviço externo de IP)",
           "apikey": "Chave de API",
           "domain": "Domínio",
           "scan_interval": "Intervalo de atualização (0-120 minutos, 0=desativado)",
@@ -30,7 +30,7 @@
     "step": {
       "init": {
         "data": {
-          "api_key_economy": "Ativar modo econômico (atualiza apenas quando o IP muda, verificado via https://checkip.amazonaws.com/)",
+          "api_key_economy": "Ativar modo econômico (atualiza apenas quando o IP muda, verificado por um serviço externo de IP)",
           "scan_interval": "Intervalo de atualização (0-120 minutos, 0=desativado)"
         },
         "description": "Configure o intervalo de atualização e o modo econômico. Com uma conta gratuita, você tem 64 atualizações por dia. O intervalo recomendado é de 23 minutos (24 horas ÷ 64 atualizações ≈ 22,5 minutos).",
@@ -43,7 +43,7 @@
       "description": "Atualizar manualmente o endereço IP. Nota: Cada atualização consome 1 dos 64 tokens diários.",
       "fields": {
         "economy": {
-          "description": "Ativar modo econômico (atualiza apenas quando o IP muda, verificado via https://checkip.amazonaws.com/)",
+          "description": "Ativar modo econômico (atualiza apenas quando o IP muda, verificado por um serviço externo de IP)",
           "name": "Modo Econômico"
         }
       },
