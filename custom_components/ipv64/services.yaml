@@ -4,7 +4,7 @@ refresh:
   fields:
     economy:
       name: "Economy-Modus"
-      description: "Economy-Modus aktivieren (Updates nur bei IP-Änderung, geprüft via https://checkip.amazonaws.com/)."
+      description: "Economy-Modus aktivieren (Updates nur bei IP-Änderung, geprüft über einen externen IP-Dienst)."
       selector:
         boolean:
 add_domain:
