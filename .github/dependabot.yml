@@ -6,7 +6,15 @@ updates:
       interval: daily
       time: "22:30"
       timezone: "Europe/Berlin"
-    open-pull-requests-limit: 1000
+    open-pull-requests-limit: 10
+    groups:
+      github-actions-non-major:
+        update-types:
+          - "minor"
+          - "patch"
+      github-actions-major:
+        update-types:
+          - "major"
     labels:
       - "in progress"
       - "dependencies"
