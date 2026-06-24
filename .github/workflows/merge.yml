@@ -25,7 +25,7 @@ jobs:
 
       - name: Check if Pull Request
         id: check_pr
-        run: echo "is_pull_request=${{ github.event_name == 'pull_request' }}" >> $GITHUB_ENV
+        run: echo "is_pull_request=${{ github.event_name == 'pull_request' }}" >> "$GITHUB_ENV"
       - if: env.is_pull_request == 'true'
         name: Merge
         uses: Ludy87/action/merge@caa2185f8e7d1ba61c71879e8f150c9df5231035 # v1.0.8
