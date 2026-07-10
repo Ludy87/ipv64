@@ -7,6 +7,10 @@ updates:
       time: "22:30"
       timezone: "Europe/Berlin"
     open-pull-requests-limit: 10
+    groups:
+      codeql-action:
+        patterns:
+          - "github/codeql-action*"
     labels:
       - "in progress"
       - "dependencies"
