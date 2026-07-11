@@ -95,3 +95,12 @@ ALLOWED_DOMAINS: Final[list[str]] = [
     "root64.de",
     "route64.de",
 ]
+
+
+def is_allowed_domain(domain: str) -> bool:
+    """Return whether a domain belongs to an IPv64 allowed zone."""
+    normalized_domain = domain.strip().lower().rstrip(".")
+    return any(
+        normalized_domain == allowed_domain or normalized_domain.endswith(f".{allowed_domain}")
+        for allowed_domain in ALLOWED_DOMAINS
+    )
