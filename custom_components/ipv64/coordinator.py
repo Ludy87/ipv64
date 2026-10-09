@@ -525,6 +525,15 @@ class IPv64DataUpdateCoordinator(DataUpdateCoordinator):
         """Check if the IP has changed."""
         _LOGGER.debug("Checking IP in economy mode for %s", self.config_entry.data.get(CONF_DOMAIN))
         config_domain = self.config_entry.data.get(CONF_DOMAIN)
+        record_types = {
+            str(subdomain.get(CONF_TYPE, "")).upper()
+            for subdomain in self.data.get("subdomains", [])
+            if subdomain.get(CONF_DOMAIN) == config_domain
+        }
+        if "AAAA" in record_types:
+            _LOGGER.debug("AAAA record found for %s; forcing update because the check endpoint is IPv4-only", config_domain)
+            return True
+
         stored_ip = self.data.get(CONF_IP_ADDRESS, "unknown")
         if stored_ip == "unknown":
             _LOGGER.warning("No stored IP found for domain %s, fetching from subdomains", config_domain)
