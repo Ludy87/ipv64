@@ -4,7 +4,7 @@ Thank you for taking the time to contribute!
 
 ## Development setup
 
-- Use **Python 3.13**. Dependencies are listed in the [pyproject.toml](pyproject.toml) file.
+- Use **Python 3.14**. Dependencies are listed in the [pyproject.toml](pyproject.toml) file.
 - Install `pre-commit` and its hooks:
   ```bash
   pip install pre-commit
