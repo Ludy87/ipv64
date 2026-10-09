@@ -171,18 +171,20 @@ class IPv64DomainSensor(IPv64BaseEntity, SensorEntity):
 
     _attr_icon = "mdi:ip"
 
-    def __init__(self, coordinator: IPv64DataUpdateCoordinator, domain: str) -> None:
+    def __init__(self, coordinator: IPv64DataUpdateCoordinator, subdomain: dict[str, Any]) -> None:
         """Initialize the IPv64 domain sensor."""
+        domain = subdomain[CONF_DOMAIN]
         super().__init__(coordinator, domain)
         self._domain = domain
+        self._record_type = subdomain.get("type", "A").upper()
         self._attr_name = f"{SHORT_NAME} {domain} IP"
-        self._attr_unique_id = f"{DOMAIN}_{domain}_ip"
+        self._attr_unique_id = f"{DOMAIN}_{domain}_{self._record_type.lower()}_ip"
 
     @property
     def native_value(self) -> StateType:
         """Return the native value of the sensor."""
         for subdomain in self.coordinator.data.get("subdomains", []):
-            if subdomain.get(CONF_DOMAIN) == self._domain:
+            if subdomain.get(CONF_DOMAIN) == self._domain and subdomain.get("type", "A").upper() == self._record_type:
                 return subdomain.get(CONF_IP_ADDRESS, "unknown")
         return "unknown"
 
@@ -193,7 +195,7 @@ class IPv64DomainSensor(IPv64BaseEntity, SensorEntity):
         if not self.coordinator.data:
             return data
         for subdomain in self.coordinator.data.get("subdomains", []):
-            if subdomain.get(CONF_DOMAIN) == self._domain:
+            if subdomain.get(CONF_DOMAIN) == self._domain and subdomain.get("type", "A").upper() == self._record_type:
                 subdomain_data = {k: v for k, v in subdomain.items() if k != "subdomains"}
                 main_domain = self._domain.split(".", 1)[1] if "." in self._domain else self._domain
                 metadata = self.coordinator.data.get(f"{main_domain}_metadata", {})
@@ -242,9 +244,7 @@ async def async_setup_entry(
     if not coordinator.data.get("subdomains"):
         _LOGGER.warning("No subdomains available for %s, skipping domain sensors", config_entry.entry_id)
     else:
-        entities.extend(
-            [IPv64DomainSensor(coordinator, subdomain[CONF_DOMAIN]) for subdomain in coordinator.data["subdomains"]]
-        )
+        entities.extend([IPv64DomainSensor(coordinator, subdomain) for subdomain in coordinator.data["subdomains"]])
         entities.append(IPv64LastUpdateSensor(coordinator))
 
     if coordinator.data.get(CONF_DYNDNS_UPDATES) is not None:
