@@ -29,10 +29,10 @@ from .const import (
     CONF_REMAINING_UPDATES,
     DOMAIN,
     GET_DOMAIN_URL,
+    IPV6_UPDATE_URL,
     RETRY_ATTEMPTS,
     RETRY_DELAY,
     TIMEOUT,
-    UPDATE_URL,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -357,7 +357,7 @@ class IPv64DataUpdateCoordinator(DataUpdateCoordinator):
             for attempt in range(RETRY_ATTEMPTS):
                 try:
                     async with session.get(
-                        f"{UPDATE_URL}?domain={self.config_entry.data.get(CONF_DOMAIN, '')}&ipv6=auto",
+                        f"{IPV6_UPDATE_URL}?domain={self.config_entry.data.get(CONF_DOMAIN, '')}",
                         headers=headers_token,
                         timeout=TIMEOUT,
                     ) as resp:
