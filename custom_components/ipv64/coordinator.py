@@ -357,7 +357,7 @@ class IPv64DataUpdateCoordinator(DataUpdateCoordinator):
             for attempt in range(RETRY_ATTEMPTS):
                 try:
                     async with session.get(
-                        f"{UPDATE_URL}?domain={self.config_entry.data.get(CONF_DOMAIN, '')}",
+                        f"{UPDATE_URL}?domain={self.config_entry.data.get(CONF_DOMAIN, '')}&ipv6=auto",
                         headers=headers_token,
                         timeout=TIMEOUT,
                     ) as resp:
