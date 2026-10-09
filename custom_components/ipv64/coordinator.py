@@ -29,6 +29,8 @@ from .const import (
     CONF_REMAINING_UPDATES,
     DOMAIN,
     GET_DOMAIN_URL,
+    IPV4_UPDATE_URL,
+    IPV6_UPDATE_URL,
     RETRY_ATTEMPTS,
     RETRY_DELAY,
     TIMEOUT,
@@ -264,6 +266,51 @@ class IPv64DataUpdateCoordinator(DataUpdateCoordinator):
             update_interval=timedelta(minutes=interval) if interval > 0 else None,
         )
 
+    async def _async_update_ip(self, session: aiohttp.ClientSession, update_url: str, headers: dict[str, str]) -> None:
+        """Update one IP address family with the documented IPv64 endpoint."""
+        domain = self.config_entry.data.get(CONF_DOMAIN, "")
+        for attempt in range(RETRY_ATTEMPTS):
+            try:
+                async with session.get(f"{update_url}?domain={domain}", headers=headers, timeout=TIMEOUT) as resp:
+                    resp.raise_for_status()
+                    update_result = await resp.json()
+                    self.data.update({"update_result": update_result.get("status", "unknown")})
+                    _LOGGER.info("IP update successful for %s: %s", domain, update_result)
+                    return
+            except aiohttp.ClientResponseError as error:
+                if attempt == RETRY_ATTEMPTS - 1:
+                    if error.status == 429:
+                        _LOGGER.error("Update limit reached for %s", domain)
+                        async_create(
+                            self.hass,
+                            f"IPv64.net: Update limit reached for {domain}.",
+                            title="IPv64.net Update Limit",
+                            notification_id=f"{DOMAIN}_{self.config_entry.entry_id}_limit_error",
+                        )
+                    elif error.status == 401:
+                        _LOGGER.error("Invalid update token for %s", domain)
+                        async_create(
+                            self.hass,
+                            f"IPv64.net: Invalid update token for {domain}.",
+                            title="IPv64.net Authentication Error",
+                            notification_id=f"{DOMAIN}_{self.config_entry.entry_id}_auth_error",
+                        )
+                    raise UpdateFailed(f"Update failed after retries: {error}") from error
+                _LOGGER.warning("Update failed, retrying (%d/%d): %s", attempt + 1, RETRY_ATTEMPTS, error.message)
+                await asyncio.sleep(RETRY_DELAY)
+            except (TimeoutError, aiohttp.ClientError) as error:
+                if attempt == RETRY_ATTEMPTS - 1:
+                    _LOGGER.error("Failed to update IP for %s after %d attempts: %s", domain, RETRY_ATTEMPTS, error)
+                    async_create(
+                        self.hass,
+                        f"IPv64.net: Network error while updating IP for {domain}: {error}",
+                        title="IPv64.net Network Error",
+                        notification_id=f"{DOMAIN}_{self.config_entry.entry_id}_network_update_error",
+                    )
+                    raise UpdateFailed(f"Update failed: {error}") from error
+                _LOGGER.warning("Update failed, retrying (%d/%d): %s", attempt + 1, RETRY_ATTEMPTS, error)
+                await asyncio.sleep(RETRY_DELAY)
+
     async def async_update(self, call: ServiceCall) -> None:
         """Update IPv64 data from a service call."""
         _LOGGER.debug("Manual IP address update triggered via service call for entry: %s", self.config_entry.entry_id)
@@ -354,10 +401,27 @@ class IPv64DataUpdateCoordinator(DataUpdateCoordinator):
 
         if ip_is_changed:
             headers_token = {"Authorization": f"Bearer {self.config_entry.data.get(CONF_TOKEN, '')}"}
+            config_domain = self.config_entry.data.get(CONF_DOMAIN, "")
+            record_types = {
+                str(subdomain.get(CONF_TYPE, "")).upper()
+                for subdomain in self.data.get("subdomains", [])
+                if subdomain.get(CONF_DOMAIN) == config_domain
+            }
+            update_urls = [
+                update_url
+                for record_type, update_url in (("A", IPV4_UPDATE_URL), ("AAAA", IPV6_UPDATE_URL))
+                if record_type in record_types
+            ] or [UPDATE_URL]
+            for update_url in update_urls:
+                await self._async_update_ip(session, update_url, headers_token)
+            ip_is_changed = False
+
+        if ip_is_changed:
+            # Kept for compatibility with older cached coordinator data.
             for attempt in range(RETRY_ATTEMPTS):
                 try:
                     async with session.get(
-                        f"{UPDATE_URL}?domain={self.config_entry.data.get(CONF_DOMAIN, '')}",
+                        f"{IPV6_UPDATE_URL}?domain={self.config_entry.data.get(CONF_DOMAIN, '')}",
                         headers=headers_token,
                         timeout=TIMEOUT,
                     ) as resp:
@@ -461,6 +525,15 @@ class IPv64DataUpdateCoordinator(DataUpdateCoordinator):
         """Check if the IP has changed."""
         _LOGGER.debug("Checking IP in economy mode for %s", self.config_entry.data.get(CONF_DOMAIN))
         config_domain = self.config_entry.data.get(CONF_DOMAIN)
+        record_types = {
+            str(subdomain.get(CONF_TYPE, "")).upper()
+            for subdomain in self.data.get("subdomains", [])
+            if subdomain.get(CONF_DOMAIN) == config_domain
+        }
+        if "AAAA" in record_types:
+            _LOGGER.debug("AAAA record found for %s; forcing update because the check endpoint is IPv4-only", config_domain)
+            return True
+
         stored_ip = self.data.get(CONF_IP_ADDRESS, "unknown")
         if stored_ip == "unknown":
             _LOGGER.warning("No stored IP found for domain %s, fetching from subdomains", config_domain)
