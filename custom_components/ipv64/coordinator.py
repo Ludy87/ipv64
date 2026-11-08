@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import asyncio
-from datetime import datetime, timedelta
+from datetime import UTC, datetime, timedelta
 import logging
 from typing import Any
 
@@ -35,20 +35,21 @@ from .const import (
     RETRY_DELAY,
     TIMEOUT,
     UPDATE_URL,
+    is_allowed_domain,
 )
 
 _LOGGER = logging.getLogger(__name__)
 
 
-async def get_domain(session: aiohttp.ClientSession, headers: dict[str, str], data: dict[str, Any]) -> None:
+async def get_domain(session: aiohttp.ClientSession, headers: dict[str, str], data: dict[str, Any]) -> dict[str, Any]:
     """Fetch domain information from the IPv64.net API."""
     config_domain = data.get(CONF_DOMAIN, "")
     # Validate domain against allowed domains
-    if not any(config_domain.endswith(allowed_domain) for allowed_domain in ALLOWED_DOMAINS):
+    if not is_allowed_domain(config_domain):
         _LOGGER.error("Domain %s is not one of the allowed domains: %s", config_domain, ALLOWED_DOMAINS)
         data["subdomains"] = []
         data["error"] = f"Domain {config_domain} not allowed"
-        return
+        return data
 
     for attempt in range(RETRY_ATTEMPTS):
         try:
@@ -60,7 +61,7 @@ async def get_domain(session: aiohttp.ClientSession, headers: dict[str, str], da
                     _LOGGER.warning("No subdomains found for account")
                     data["subdomains"] = []
                     data["error"] = "No subdomains available"
-                    return
+                    return data
 
                 sub_domains_list = []
                 domain_found = False
@@ -99,9 +100,9 @@ async def get_domain(session: aiohttp.ClientSession, headers: dict[str, str], da
                     _LOGGER.error("Configured domain %s not found in subdomains", config_domain)
                     data["subdomains"] = []
                     data["error"] = f"Domain {config_domain} not found"
-                    return
+                    return data
                 data["subdomains"] = sub_domains_list
-                return
+                return data
         except aiohttp.ClientResponseError as error:
             if attempt == RETRY_ATTEMPTS - 1:
                 _LOGGER.error(
@@ -112,7 +113,7 @@ async def get_domain(session: aiohttp.ClientSession, headers: dict[str, str], da
                 )
                 data["subdomains"] = []
                 data["error"] = "Failed to fetch domains"
-                return
+                return data
             _LOGGER.warning(
                 "Failed to fetch domains, retrying (%d/%d): %s",
                 attempt + 1,
@@ -125,7 +126,7 @@ async def get_domain(session: aiohttp.ClientSession, headers: dict[str, str], da
                 _LOGGER.error("Failed to fetch domains after %d attempts: %s", RETRY_ATTEMPTS, err)
                 data["subdomains"] = []
                 data["error"] = str(err)
-                return
+                return data
             _LOGGER.warning(
                 "Failed to fetch domains, retrying (%d/%d): %s",
                 attempt + 1,
@@ -134,10 +135,11 @@ async def get_domain(session: aiohttp.ClientSession, headers: dict[str, str], da
             )
             await asyncio.sleep(RETRY_DELAY)
 
+    return data
 
 async def add_domain(hass: HomeAssistant, coordinator: DataUpdateCoordinator, domain: str, api_key: str) -> None:
     """Add a new domain via the IPv64.net API."""
-    if not any(domain.endswith(allowed_domain) for allowed_domain in ALLOWED_DOMAINS):
+    if not is_allowed_domain(domain):
         _LOGGER.error("Domain %s is not one of the allowed domains: %s", domain, ALLOWED_DOMAINS)
         raise ValueError(f"Domain {domain} not allowed")
 
@@ -193,7 +195,7 @@ async def add_domain(hass: HomeAssistant, coordinator: DataUpdateCoordinator, do
 
 async def delete_domain(hass: HomeAssistant, coordinator: DataUpdateCoordinator, domain: str, api_key: str) -> None:
     """Delete a domain via the IPv64.net API."""
-    if not any(domain.endswith(allowed_domain) for allowed_domain in ALLOWED_DOMAINS):
+    if not is_allowed_domain(domain):
         _LOGGER.error("Domain %s is not one of the allowed domains: %s", domain, ALLOWED_DOMAINS)
         raise ValueError(f"Domain {domain} not allowed")
 
@@ -328,18 +330,24 @@ class IPv64DataUpdateCoordinator(DataUpdateCoordinator):
             _LOGGER.debug("self.data was invalid, reinitializing")
             self.data = {CONF_DOMAIN: self.config_entry.data.get(CONF_DOMAIN, "")}
 
+        await self._async_restore_cache()
+
         session = async_get_clientsession(self.hass)
         headers_api = {"Authorization": f"Bearer {self.config_entry.data.get(CONF_API_KEY, '')}"}
 
         try:
             for attempt in range(RETRY_ATTEMPTS):
                 try:
-                    account_info = await get_account_info(session, headers_api, self.config_entry.data)
+                    account_info, domain_info = await asyncio.gather(
+                        get_account_info(session, headers_api, self.config_entry.data),
+                        get_domain(session, headers_api, {CONF_DOMAIN: self.config_entry.data.get(CONF_DOMAIN, "")}),
+                    )
                     if not isinstance(account_info, dict):
                         _LOGGER.error("Received invalid account_info: %s", account_info)
                         raise UpdateFailed("Received invalid account info")
-                    _LOGGER.debug("Received account info: %s", account_info)
+                    _LOGGER.debug("Received account and domain info for %s", self.config_entry.data.get(CONF_DOMAIN))
                     self.data.update(account_info)
+                    self.data.update(domain_info)
                     async_dismiss(
                         self.hass,
                         notification_id=f"{DOMAIN}_{self.config_entry.entry_id}_api_error",
@@ -391,7 +399,8 @@ class IPv64DataUpdateCoordinator(DataUpdateCoordinator):
             )
             raise UpdateFailed(f"Unexpected error: {err}") from err
 
-        await get_domain(session, headers_api, self.data)
+        if self.data.get("error"):
+            _LOGGER.warning("Domain data update completed with warning: %s", self.data["error"])
 
         ip_is_changed = False
         if self.config_entry.options.get(CONF_API_ECONOMY, True) or is_economy:
@@ -429,19 +438,19 @@ class IPv64DataUpdateCoordinator(DataUpdateCoordinator):
                         update_result = await resp.json()
                         self.data.update({"update_result": update_result.get("status", "unknown")})
                         _LOGGER.info("IP update successful for %s: %s", self.config_entry.data.get(CONF_DOMAIN), update_result)
+                        async_dismiss(
+                            self.hass,
+                            notification_id=f"{DOMAIN}_{self.config_entry.entry_id}_limit_error",
+                        )
+                        async_dismiss(
+                            self.hass,
+                            notification_id=f"{DOMAIN}_{self.config_entry.entry_id}_auth_error",
+                        )
+                        async_dismiss(
+                            self.hass,
+                            notification_id=f"{DOMAIN}_{self.config_entry.entry_id}_network_update_error",
+                        )
                         break
-                    async_dismiss(
-                        self.hass,
-                        notification_id=f"{DOMAIN}_{self.config_entry.entry_id}_limit_error",
-                    )
-                    async_dismiss(
-                        self.hass,
-                        notification_id=f"{DOMAIN}_{self.config_entry.entry_id}_auth_error",
-                    )
-                    async_dismiss(
-                        self.hass,
-                        notification_id=f"{DOMAIN}_{self.config_entry.entry_id}_network_update_error",
-                    )
                 except aiohttp.ClientResponseError as error:
                     self.data.update({"update_result": "fail"})
                     if attempt == RETRY_ATTEMPTS - 1:
@@ -500,8 +509,8 @@ class IPv64DataUpdateCoordinator(DataUpdateCoordinator):
 
         updates_used = self.data.get(CONF_DYNDNS_UPDATES, 0)
         updates_limit = self.data.get(CONF_DAILY_UPDATE_LIMIT, 64)
-        if updates_used > 0 and updates_limit > 0:
-            remaining_updates = updates_limit - int(updates_used)
+        if isinstance(updates_used, int | float) and isinstance(updates_limit, int | float) and updates_limit > 0:
+            remaining_updates = max(0, int(updates_limit) - int(updates_used))
             self.data.update({CONF_REMAINING_UPDATES: remaining_updates})
             if updates_used >= updates_limit * 0.9:
                 async_create(
@@ -516,10 +525,22 @@ class IPv64DataUpdateCoordinator(DataUpdateCoordinator):
                     notification_id=f"{DOMAIN}_{self.config_entry.entry_id}_update_limit",
                 )
 
-        self.data["cache_time"] = datetime.now().isoformat()
+        self.data["cache_time"] = datetime.now(UTC).isoformat()
         await self._cache.async_save(self.data)
 
         return self.data
+
+    async def _async_restore_cache(self) -> None:
+        """Restore cached coordinator data for faster startup and offline availability."""
+        if self.data.get("cache_time"):
+            return
+        cached_data = await self._cache.async_load()
+        if not isinstance(cached_data, dict):
+            return
+        if cached_data.get(CONF_DOMAIN) != self.config_entry.data.get(CONF_DOMAIN):
+            return
+        self.data.update(cached_data)
+        _LOGGER.debug("Restored cached IPv64 data for %s", self.config_entry.data.get(CONF_DOMAIN))
 
     async def check_ip_equal(self, session: aiohttp.ClientSession) -> bool:
         """Check if the IP has changed."""
