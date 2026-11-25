@@ -34,6 +34,7 @@ from .const import (
     GET_ACCOUNT_INFO_URL,
     GET_DOMAIN_URL,
     TIMEOUT,
+    is_allowed_domain,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -123,7 +124,7 @@ async def check_domain_login(hass: core.HomeAssistant, data: dict[str, Any]) -> 
 
     # Validate domain against allowed domains
     input_domain = data[CONF_DOMAIN]
-    if not any(input_domain.endswith(allowed_domain) for allowed_domain in ALLOWED_DOMAINS):
+    if not is_allowed_domain(input_domain):
         _LOGGER.error("Domain %s is not one of the allowed domains: %s", input_domain, ALLOWED_DOMAINS)
         raise InvalidDomain(f"Domain {input_domain} is not allowed. Allowed domains: {', '.join(ALLOWED_DOMAINS)}")
 
